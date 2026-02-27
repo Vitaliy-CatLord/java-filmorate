@@ -1,9 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -11,13 +8,11 @@ import java.time.Instant;
 /**
  * Film.
  */
-@Getter
-@Setter
+@Data
 @EqualsAndHashCode(of = "id")
-@ToString
 public class Film {
 
-    long id;
+    Long id;
     String name;
     String description;
     Instant releaseDate;
