@@ -26,9 +26,38 @@ public class UserController {
 
     @PostMapping
     public User postUser(@RequestBody User newUser) throws ValidationException {
+        validateUser(newUser);
+        isEmailEmployed(newUser);
+        newUser.setId(getNextId());
+        usersStorage.put(newUser.getId(), newUser);
+        log.info("Создан новый юзер {}", newUser);
+        return newUser;
+    }
+
+    @PutMapping
+    public User putUser(@RequestBody User newUser) throws ValidationException {
+        validateUser(newUser);
+        return setOldUser(newUser);
+    }
+
+    @GetMapping
+    public Collection<User> getAllUsers() {
+        return usersStorage.values();
+    }
+
+    private long getNextId() {
+        long currentMaxId = usersStorage.keySet()
+                .stream()
+                .mapToLong(id -> id)
+                .max()
+                .orElse(0);
+        return ++currentMaxId;
+    }
+
+    private void validateUser (User newUser) throws ValidationException, DuplicatedDataException {
         //mail
         if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
-            String message = "Неверно указан Емеил";
+            String message = "Емеил должен быть заполнен";
             log.warn(message);
             throw new ValidationException(message);
         }
@@ -36,11 +65,6 @@ public class UserController {
             String message = "Емаил должен содержать @";
             log.warn(message);
             throw new ValidationException(message);
-        }
-        if (isEmailEmployed(newUser)) {
-            String message = "Данный емеил занят";
-            log.warn(message);
-            throw new DuplicatedDataException(message);
         }
         //login
         if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
@@ -65,38 +89,20 @@ public class UserController {
             throw new ValidationException(message);
         }
 
-
-        newUser.setId(getNextId());
-        usersStorage.put(newUser.getId(), newUser);
-        log.info("Создан новый юзер {}", newUser);
-        return newUser;
     }
 
-    @PutMapping
-    public User putUser(@RequestBody User newUser) throws ValidationException {
+    private User setOldUser(User newUser) {
 
         if (newUser.getId() == null) {
             String message = "Id должен быть указан";
             log.warn(message);
             throw new ValidationException(message);
         }
-        //верификация только по знанию id и email
-        // (странно по одному айди человека верифицировать)
-        // -значит оба неизменяемы
+        //верификация для изменения учетки по совпадению тройки id-mail-login
         if (usersStorage.containsKey(newUser.getId())) {
-            if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
-                String message = "Емеил должен быть заполнен";
-                log.warn(message);
-                throw new ValidationException(message);
-            }
-            if (!newUser.getEmail().contains("@")) {
-                String message = "Емаил должен содержать @";
-                log.warn(message);
-                throw new ValidationException(message);
-            }
             User oldUser = usersStorage.get(newUser.getId());
-
-            if (oldUser.getEmail().equals(newUser.getEmail())) {
+            if (oldUser.getEmail().equals(newUser.getEmail())
+                    && oldUser.getLogin().equals(newUser.getLogin())) {
                 if (!newUser.getEmail().isBlank()) {
                     oldUser.setEmail(newUser.getEmail());
                 }
@@ -112,7 +118,7 @@ public class UserController {
                 log.info("Изменен пользователь. Новые данные: {}", oldUser);
                 return oldUser;
             } else {
-                String message = "Емаил не соответствует ID";
+                String message = "Емаил и/или логин не соответствует ID";
                 log.warn(message);
                 throw new DuplicatedDataException(message);
             }
@@ -121,25 +127,19 @@ public class UserController {
             log.warn(message);
             throw new ValidationException(message);
         }
+
+
+
+
     }
 
-    @GetMapping
-    public Collection<User> getAllUsers() {
-        return usersStorage.values();
-    }
-
-    private long getNextId() {
-        long currentMaxId = usersStorage.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
-    }
-
-    private boolean isEmailEmployed(User newUser) {
-        return usersStorage.values().stream()
-                .anyMatch(oldUser -> newUser.getEmail().equals(oldUser.getEmail()));
+    private void isEmailEmployed(User newUser) {
+        if (usersStorage.values().stream()
+                .anyMatch(oldUser -> newUser.getEmail().equals(oldUser.getEmail()))) {
+            String message = "Данный емеил занят";
+            log.warn(message);
+            throw new DuplicatedDataException(message);
+        }
 
     }
 

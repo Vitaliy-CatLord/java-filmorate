@@ -28,72 +28,80 @@ public class FilmController {
     @PostMapping
     public Film postFilm(@RequestBody Film newFilm) {
         try {
-            if (newFilm.getName() == null || newFilm.getName().isBlank()) {
-                throw new ValidationException("Незаполненно поле Название фильма");
-            }
-            if (newFilm.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
-                throw new ValidationException("Максимальная длина описания — " + MAX_FILM_DESCRIPTION_LENGTH + "символов");
-            }
-            if (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)) {
-                throw new ValidationException("Дата релиза указана неверно");
-            }
-            if (newFilm.getDuration().toSeconds() < 0) {
-                throw new ValidationException("Длительность фильма не может быть отрицательной");
-            }
-
+            validateFilm(newFilm);
             newFilm.setId(getNextId());
             filmStorage.put(newFilm.getId(), newFilm);
             return newFilm;
-        } catch (Exception e) {
+        } catch (ValidationException e) {
             log.error(e.getMessage());
-            return newFilm;
+            throw e;
         }
-
     }
 
     @PutMapping
     public Film putFilm(@RequestBody Film newFilm) {
         try {
-            // верификация фильма только по id, все остальное изменяемо
-            if (filmStorage.containsKey(newFilm.getId())) {
-                Film oldFilm = filmStorage.get(newFilm.getId());
-
-                if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
-                    oldFilm.setName(newFilm.getName());
-                }
-                if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
-                    if (newFilm.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
-                        throw new ValidationException("Максимальная длина описания — " + MAX_FILM_DESCRIPTION_LENGTH + "символов");
-                    }
-                    oldFilm.setDescription(newFilm.getDescription());
-                }
-                if (newFilm.getReleaseDate() != null) {
-                    if (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)) {
-                        throw new ValidationException("Дата релиза указана неверно");
-                    }
-                    oldFilm.setReleaseDate(newFilm.getReleaseDate());
-                }
-                if (newFilm.getDuration() != null) {
-                    if (newFilm.getDuration().toSeconds() < 0) {
-                        throw new ValidationException("Длительность фильма не может быть отрицательной");
-                    }
-                    oldFilm.setDuration(newFilm.getDuration());
-                }
-                return oldFilm;
-            } else {
-                throw new ValidationException("Фильма с таким ID не существует");
-            }
+            validateFilm(newFilm);
+            return setOldFilm(newFilm);
         } catch (Exception e) {
             log.error(e.getMessage());
-            return newFilm;
+            throw e;
         }
-
-
     }
 
     @GetMapping
     public Collection<Film> getAllFilms() {
         return filmStorage.values();
+    }
+
+    private void validateFilm (Film newFilm) throws ValidationException {
+        if (newFilm.getName() == null || newFilm.getName().isBlank()) {
+            throw new ValidationException("Незаполненно поле Название фильма");
+        }
+        if (newFilm.getDescription() != null && newFilm.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
+            throw new ValidationException("Максимальная длина описания — " + MAX_FILM_DESCRIPTION_LENGTH + "символов");
+        }
+        if (newFilm.getReleaseDate() != null && (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)
+                                                    || newFilm.getReleaseDate().isAfter(Instant.now()))) {
+            throw new ValidationException("Дата релиза указана неверно");
+        }
+        if (newFilm.getDuration() != null && newFilm.getDuration().toSeconds() < 0) {
+            throw new ValidationException("Длительность фильма должна быть положительным числом.");
+        }
+    }
+
+    private Film setOldFilm(Film newFilm) throws ValidationException {
+        //верификация фильма только по id, остальные поля могут все же совпадать
+        if (filmStorage.containsKey(newFilm.getId())) {
+            Film oldFilm = filmStorage.get(newFilm.getId());
+
+            if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
+                oldFilm.setName(newFilm.getName());
+            }
+            if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
+                if (newFilm.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
+                    throw new ValidationException("Максимальная длина описания — "
+                                                    + MAX_FILM_DESCRIPTION_LENGTH + "символов");
+                }
+                oldFilm.setDescription(newFilm.getDescription());
+            }
+            if (newFilm.getReleaseDate() != null) {
+                if (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)
+                        || newFilm.getReleaseDate().isAfter(Instant.now())) {
+                    throw new ValidationException("Дата релиза указана неверно");
+                }
+                oldFilm.setReleaseDate(newFilm.getReleaseDate());
+            }
+            if (newFilm.getDuration() != null) {
+                if (newFilm.getDuration().toNanos() < 0) {
+                    throw new ValidationException("Длительность фильма не может быть отрицательной");
+                }
+                oldFilm.setDuration(newFilm.getDuration());
+            }
+            return oldFilm;
+        } else {
+            throw new ValidationException("Фильма с таким ID не существует");
+        }
     }
 
 

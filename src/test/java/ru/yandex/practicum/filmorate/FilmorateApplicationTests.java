@@ -72,7 +72,7 @@ class FilmorateApplicationTests {
 		User userBlank = new User("   ", "dogLogin");
 		ValidationException exp = assertThrows(
 				ValidationException.class, () -> userController.postUser(userBlank));
-		assertEquals("Неверно указан Емеил", exp.getMessage());
+		assertEquals("Емеил должен быть заполнен", exp.getMessage());
 	}
 
 	@Test
@@ -110,7 +110,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void testPostWithoutNameAKLogin() {
+	void testPostWithoutNameAKALogin() {
 		User user = userController.postUser(userOnlyNeeded);
 		assertEquals(user.getName(), user.getLogin());
 	}
