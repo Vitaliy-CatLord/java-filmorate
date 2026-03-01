@@ -16,7 +16,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     private final Map<Long, User> usersStorage = new HashMap<>();
-    private final static Logger log = LoggerFactory.getLogger(UserController.class);
+    private final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
