@@ -7,9 +7,7 @@ import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -20,9 +18,7 @@ public class UserController {
     private final Map<Long, User> usersStorage = new HashMap<>();
     private final static Logger log = LoggerFactory.getLogger(UserController.class);
 
-    private static final Instant MIN_TIME_OF_BIRTHDAY = LocalDateTime.of(1909, 8, 21, 0, 0)
-            .atZone(ZoneId.of("Europe/Paris"))
-            .toInstant();
+    private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
     @PostMapping
     public User postUser(@RequestBody User newUser) throws ValidationException {
@@ -82,7 +78,7 @@ public class UserController {
             newUser.setName(newUser.getLogin());
         }
         //birthday
-        if (newUser.getBirthday() != null && (newUser.getBirthday().isAfter(Instant.now())
+        if (newUser.getBirthday() != null && (newUser.getBirthday().isAfter(LocalDate.now())
                 || newUser.getBirthday().isBefore(MIN_TIME_OF_BIRTHDAY))) {
             String message = "Неверно указана дата рождения";
             log.warn(message);

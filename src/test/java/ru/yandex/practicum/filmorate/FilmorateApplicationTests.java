@@ -10,36 +10,28 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
+import java.time.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class FilmorateApplicationTests {
 
-	private static final Instant MIN_TIME_OF_BIRTHDAY = LocalDateTime.of(1909, 8, 21, 0, 0)
-			.atZone(ZoneId.of("Europe/Paris"))
-			.toInstant();
-	private static final Instant MIN_TIME_OF_RELEASE = LocalDateTime.of(1895, 12, 28, 12, 0)
-			.atZone(ZoneId.of("Europe/Paris"))
-			.toInstant();
+	private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
+	private static final LocalDate MIN_TIME_OF_RELEASE = LocalDate.of(1895, 12, 28);
 
 	private static final FilmController filmController = new FilmController();
 	private static final UserController userController = new UserController();
 	//variants of normal users
-	User userAllField = new User("normall@mail", "normallLogin", "normallName", MIN_TIME_OF_BIRTHDAY.plus(6000, ChronoUnit.HOURS));
+	User userAllField = new User("normall@mail", "normallLogin", "normallName", MIN_TIME_OF_BIRTHDAY.plusYears(50));
 	User userWithoutBirthday = new User("normBirt@mail", "normBirthLogin", "normBirthName");
-	User userWithoutName = new User("normName@mail", "normNameLogin",  MIN_TIME_OF_BIRTHDAY.plus(10000, ChronoUnit.HOURS));
+	User userWithoutName = new User("normName@mail", "normNameLogin",  MIN_TIME_OF_BIRTHDAY.plusYears(60));
 	User userOnlyNeeded = new User("normNeed@mail", "normNeedLogin");
 	//variants of normal films
-	Film filmAllField = new Film("normallName", "normallDescription", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS), Duration.ofMinutes(90));
-	Film filmWithoutDescription = new Film("descName",  MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS), Duration.ofMinutes(90));
-	Film filmWithoutReleaseDate = new Film("releaseName", "releaseDescription", Duration.ofMinutes(90));
-	Film filmWithoutDuration = new Film("duratName", "duratDescription", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS));
+	Film filmAllField = new Film("normallName", "normallDescription", MIN_TIME_OF_RELEASE.plusYears(50), 90);
+	Film filmWithoutDescription = new Film("descName",  MIN_TIME_OF_RELEASE.plusYears(60), 90);
+	Film filmWithoutReleaseDate = new Film("releaseName", "releaseDescription", 90);
+	Film filmWithoutDuration = new Film("duratName", "duratDescription", MIN_TIME_OF_RELEASE.plusYears(70));
 	Film filmOnlyName =  new Film("onlyName");;
 
 	@BeforeEach
@@ -116,8 +108,8 @@ class FilmorateApplicationTests {
 
 	@Test
 	void testUserPostErrorBirthday(){
-		User userPast = new User("normName@mail", "normNameLogin",  MIN_TIME_OF_BIRTHDAY.minus(10000, ChronoUnit.HOURS));
-		User userFuture = new User("normName@mail", "normNameLogin",  Instant.now().plus(10000, ChronoUnit.HOURS));
+		User userPast = new User("normName@mail", "normNameLogin",  MIN_TIME_OF_BIRTHDAY.minusDays(1));
+		User userFuture = new User("normName@mail", "normNameLogin",  LocalDate.now().plusDays(1));
 		ValidationException expPast = assertThrows(
 				ValidationException.class, () -> userController.postUser(userPast));
 		assertEquals("Неверно указана дата рождения", expPast.getMessage());
@@ -131,7 +123,7 @@ class FilmorateApplicationTests {
 		User userOld = userController.postUser(userOnlyNeeded);
 		userOld.setName("newName");
 		userOld.setLogin("newLogin");
-		userOld.setBirthday(Instant.now().minus(10000, ChronoUnit.HOURS));
+		userOld.setBirthday(LocalDate.now().minusDays(1));
 		User userNew = userController.putUser(userOld);
 		assertEquals(1 , userController.getAllUsers().size());
 		assertEquals(userOld.toString() , userNew.toString());
@@ -143,7 +135,7 @@ class FilmorateApplicationTests {
 		User userOld = userController.postUser(userOnlyNeeded);
 		userOld.setName("newName");
 		userOld.setLogin("newLogin");
-		userOld.setBirthday(Instant.now().minus(10000, ChronoUnit.HOURS));
+		userOld.setBirthday(LocalDate.now().minusDays(1));
 		User userNew = userController.putUser(userOld);
 		assertEquals(2 , userController.getAllUsers().size());
 		assertEquals("[" + userFirst.toString()+ ", " + userOld.toString() + "]",
@@ -245,11 +237,11 @@ class FilmorateApplicationTests {
 
 	@Test
 	void testFilmPostErrorRelease() {
-		Film FilmEarlyRelease = new Film("earlyReleaseName", MIN_TIME_OF_RELEASE.minus(6000, ChronoUnit.HOURS));
+		Film FilmEarlyRelease = new Film("earlyReleaseName", MIN_TIME_OF_RELEASE.minusDays(1));
 		Film FilmMinRelease = new Film("minReleaseName", MIN_TIME_OF_RELEASE);
-		Film FilmNormRelease = new Film("normReleaseName", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS));
-		Film FilmMaxRelease = new Film("maxReleaseName", Instant.now());
-		Film FilmLateRelease = new Film("lateReleaseName", Instant.now().plus(6000, ChronoUnit.HOURS));
+		Film FilmNormRelease = new Film("normReleaseName", MIN_TIME_OF_RELEASE.plusDays(1));
+		Film FilmMaxRelease = new Film("maxReleaseName", LocalDate.now());
+		Film FilmLateRelease = new Film("lateReleaseName", LocalDate.now().plusDays(1));
 		ValidationException expEarly = assertThrows(
 				ValidationException.class, () -> filmController.postFilm(FilmEarlyRelease));
 		assertEquals("Дата релиза указана неверно", expEarly.getMessage());
@@ -267,7 +259,7 @@ class FilmorateApplicationTests {
 		Film FilmOld = filmController.postFilm(filmOnlyName);
 		FilmOld.setName("newName");
 		FilmOld.setDescription("newDescription");
-		FilmOld.setReleaseDate(Instant.now().minus(10000, ChronoUnit.HOURS));
+		FilmOld.setReleaseDate(LocalDate.now().minusDays(1));
 		Film FilmNew = filmController.putFilm(FilmOld);
 		assertEquals(1 , filmController.getAllFilms().size());
 		assertEquals(FilmOld.toString() , FilmNew.toString());
@@ -279,7 +271,7 @@ class FilmorateApplicationTests {
 		Film FilmOld = filmController.postFilm(filmOnlyName);
 		FilmOld.setName("newName");
 		FilmOld.setDescription("newDescription");
-		FilmOld.setReleaseDate(Instant.now().minus(10000, ChronoUnit.HOURS));
+		FilmOld.setReleaseDate(LocalDate.now().minusDays(1));
 		filmController.putFilm(FilmOld);
 		assertEquals(2 , filmController.getAllFilms().size());
 		assertEquals("[" + FilmFirst.toString()+ ", " + FilmOld.toString() + "]",
@@ -336,11 +328,11 @@ class FilmorateApplicationTests {
 	@Test
 	void testFilmPutErrorRelease() {
 		filmController.postFilm(filmOnlyName);
-		Film FilmEarlyRelease = new Film((long)1, "earlyReleaseName", MIN_TIME_OF_RELEASE.minus(6000, ChronoUnit.HOURS));
+		Film FilmEarlyRelease = new Film((long)1, "earlyReleaseName", MIN_TIME_OF_RELEASE.minusDays(1));
 		Film FilmMinRelease = new Film((long)1, "minReleaseName", MIN_TIME_OF_RELEASE);
-		Film FilmNormRelease = new Film((long)1, "normReleaseName", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS));
-		Film FilmMaxRelease = new Film((long)1, "maxReleaseName", Instant.now());
-		Film FilmLateRelease = new Film((long)1, "lateReleaseName", Instant.now().plus(6000, ChronoUnit.HOURS));
+		Film FilmNormRelease = new Film((long)1, "normReleaseName", MIN_TIME_OF_RELEASE.plusDays(1));
+		Film FilmMaxRelease = new Film((long)1, "maxReleaseName", LocalDate.now());
+		Film FilmLateRelease = new Film((long)1, "lateReleaseName", LocalDate.now().plusDays(1));
 		ValidationException expEarly = assertThrows(
 				ValidationException.class, () -> filmController.putFilm(FilmEarlyRelease));
 		assertEquals("Дата релиза указана неверно", expEarly.getMessage());

@@ -3,7 +3,8 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.*;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDate;
 
 /**
  * Film.
@@ -15,29 +16,32 @@ public class Film {
     Long id;
     String name;
     String description;
-    Instant releaseDate;
-    Duration duration;
+    LocalDate releaseDate;
+    Integer duration;
 
-    public Film(String name, String description, Instant releaseDate, Duration duration) {
+    public Film() {
+    }
+
+    public Film(String name, String description, LocalDate releaseDate, Integer duration) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
     }
 
-    public Film(String name, String description, Instant releaseDate) {
+    public Film(String name, String description, LocalDate releaseDate) {
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
     }
 
-    public Film(String name, String description, Duration duration) {
+    public Film(String name, String description, Integer duration) {
         this.name = name;
         this.description = description;
         this.duration = duration;
     }
 
-    public Film(String name, Instant releaseDate, Duration duration) {
+    public Film(String name, LocalDate releaseDate, Integer duration) {
         this.name = name;
         this.releaseDate = releaseDate;
         this.duration = duration;
@@ -48,12 +52,12 @@ public class Film {
         this.description = description;
     }
 
-    public Film(String name, Instant releaseDate) {
+    public Film(String name, LocalDate releaseDate) {
         this.name = name;
         this.releaseDate = releaseDate;
     }
 
-    public Film(String name, Duration duration) {
+    public Film(String name, int duration) {
         this.name = name;
         this.duration = duration;
     }
@@ -62,7 +66,7 @@ public class Film {
         this.name = name;
     }
 
-    public Film(Long id, String name, String description, Instant releaseDate, Duration duration) {
+    public Film(Long id, String name, String description, LocalDate releaseDate, Integer duration) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -70,21 +74,21 @@ public class Film {
         this.duration = duration;
     }
 
-    public Film(Long id, String name, String description, Instant releaseDate) {
+    public Film(Long id, String name, String description, LocalDate releaseDate) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
     }
 
-    public Film(Long id, String name, String description, Duration duration) {
+    public Film(Long id, String name, String description, Integer duration) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.duration = duration;
     }
 
-    public Film(Long id, String name, Instant releaseDate, Duration duration) {
+    public Film(Long id, String name, LocalDate releaseDate, Integer duration) {
         this.id = id;
         this.name = name;
         this.releaseDate = releaseDate;
@@ -97,13 +101,13 @@ public class Film {
         this.description = description;
     }
 
-    public Film(Long id, String name, Instant releaseDate) {
+    public Film(Long id, String name, LocalDate releaseDate) {
         this.id = id;
         this.name = name;
         this.releaseDate = releaseDate;
     }
 
-    public Film(Long id, String name, Duration duration) {
+    public Film(Long id, String name, Integer duration) {
         this.id = id;
         this.name = name;
         this.duration = duration;

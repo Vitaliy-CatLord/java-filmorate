@@ -6,9 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,9 +19,7 @@ public class FilmController {
     private final static Logger log = LoggerFactory.getLogger(FilmController.class);
 
     private static final int MAX_FILM_DESCRIPTION_LENGTH = 200;
-    private static final Instant MIN_TIME_OF_RELEASE = LocalDateTime.of(1895, 12, 28, 12, 0)
-            .atZone(ZoneId.of("Europe/Paris"))
-            .toInstant();
+    private static final LocalDate MIN_TIME_OF_RELEASE = LocalDate.of(1895, 12, 28);
 
     @PostMapping
     public Film postFilm(@RequestBody Film newFilm) {
@@ -64,10 +60,10 @@ public class FilmController {
                     MAX_FILM_DESCRIPTION_LENGTH));
         }
         if (newFilm.getReleaseDate() != null && (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)
-                                                    || newFilm.getReleaseDate().isAfter(Instant.now()))) {
+                                                    || newFilm.getReleaseDate().isAfter(LocalDate.now()))) {
             throw new ValidationException("Дата релиза указана неверно");
         }
-        if (newFilm.getDuration() != null && newFilm.getDuration().toSeconds() < 0) {
+        if (newFilm.getDuration() != null && newFilm.getDuration() < 0) {
             throw new ValidationException("Длительность фильма должна быть положительным числом.");
         }
     }
@@ -94,13 +90,13 @@ public class FilmController {
             }
             if (newFilm.getReleaseDate() != null) {
                 if (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)
-                        || newFilm.getReleaseDate().isAfter(Instant.now())) {
+                        || newFilm.getReleaseDate().isAfter(LocalDate.now())) {
                     throw new ValidationException("Дата релиза указана неверно");
                 }
                 oldFilm.setReleaseDate(newFilm.getReleaseDate());
             }
             if (newFilm.getDuration() != null) {
-                if (newFilm.getDuration().toNanos() < 0) {
+                if (newFilm.getDuration() < 0) {
                     throw new ValidationException("Длительность фильма не может быть отрицательной");
                 }
                 oldFilm.setDuration(newFilm.getDuration());

@@ -1,9 +1,11 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 @EqualsAndHashCode(of = {"id", "email"})
@@ -13,7 +15,10 @@ public class User {
     String email;
     String login;
     String name;
-    Instant birthday;
+    LocalDate birthday;
+
+    public User() {
+    }
 
     public User(String email, String login) {
         this.email = email;
@@ -26,13 +31,13 @@ public class User {
         this.name = name;
     }
 
-    public User(String email, String login, Instant birthday) {
+    public User(String email, String login, LocalDate birthday) {
         this.email = email;
         this.login = login;
         this.birthday = birthday;
     }
 
-    public User(String email, String login, String name, Instant birthday) {
+    public User(String email, String login, String name, LocalDate birthday) {
         this.email = email;
         this.login = login;
         this.name = name;
