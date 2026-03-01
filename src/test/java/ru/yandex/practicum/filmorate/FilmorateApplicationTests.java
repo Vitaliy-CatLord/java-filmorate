@@ -33,7 +33,6 @@ class FilmorateApplicationTests {
     Film filmWithoutReleaseDate = new Film("releaseName", "releaseDescription", 90);
     Film filmWithoutDuration = new Film("duratName", "duratDescription", MIN_TIME_OF_RELEASE.plusYears(70));
     Film filmOnlyName = new Film("onlyName");
-    ;
 
     @BeforeEach
     void cleanStorage() {
