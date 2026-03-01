@@ -16,7 +16,7 @@ import java.util.Map;
 public class FilmController {
 
     private final Map<Long, Film> filmStorage = new HashMap<>();
-    private final static Logger log = LoggerFactory.getLogger(FilmController.class);
+    private final Logger log = LoggerFactory.getLogger(FilmController.class);
 
     private static final int MAX_FILM_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_TIME_OF_RELEASE = LocalDate.of(1895, 12, 28);
