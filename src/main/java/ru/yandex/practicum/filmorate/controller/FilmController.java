@@ -31,6 +31,7 @@ public class FilmController {
             validateFilm(newFilm);
             newFilm.setId(getNextId());
             filmStorage.put(newFilm.getId(), newFilm);
+            log.info("Добавлен фильм: {}", newFilm);
             return newFilm;
         } catch (ValidationException e) {
             log.error(e.getMessage());
@@ -59,7 +60,8 @@ public class FilmController {
             throw new ValidationException("Незаполненно поле Название фильма");
         }
         if (newFilm.getDescription() != null && newFilm.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
-            throw new ValidationException("Максимальная длина описания — " + MAX_FILM_DESCRIPTION_LENGTH + "символов");
+            throw new ValidationException(String.format("Максимальная длина описания — %s символов",
+                    MAX_FILM_DESCRIPTION_LENGTH));
         }
         if (newFilm.getReleaseDate() != null && (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)
                                                     || newFilm.getReleaseDate().isAfter(Instant.now()))) {
@@ -71,6 +73,11 @@ public class FilmController {
     }
 
     private Film setOldFilm(Film newFilm) throws ValidationException {
+        if (newFilm.getId() == null) {
+            String message = "Id должен быть указан";
+            log.warn(message);
+            throw new ValidationException(message);
+        }
         //верификация фильма только по id, остальные поля могут все же совпадать
         if (filmStorage.containsKey(newFilm.getId())) {
             Film oldFilm = filmStorage.get(newFilm.getId());
@@ -80,8 +87,8 @@ public class FilmController {
             }
             if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
                 if (newFilm.getDescription().length() > MAX_FILM_DESCRIPTION_LENGTH) {
-                    throw new ValidationException("Максимальная длина описания — "
-                                                    + MAX_FILM_DESCRIPTION_LENGTH + "символов");
+                    throw new ValidationException(String.format("Максимальная длина описания — %s символов",
+                            MAX_FILM_DESCRIPTION_LENGTH));
                 }
                 oldFilm.setDescription(newFilm.getDescription());
             }
@@ -98,6 +105,7 @@ public class FilmController {
                 }
                 oldFilm.setDuration(newFilm.getDuration());
             }
+            log.info("Изменен фильм, новые данные: {}", oldFilm);
             return oldFilm;
         } else {
             throw new ValidationException("Фильма с таким ID не существует");

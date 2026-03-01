@@ -7,8 +7,10 @@ import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -22,6 +24,9 @@ class FilmorateApplicationTests {
 	private static final Instant MIN_TIME_OF_BIRTHDAY = LocalDateTime.of(1909, 8, 21, 0, 0)
 			.atZone(ZoneId.of("Europe/Paris"))
 			.toInstant();
+	private static final Instant MIN_TIME_OF_RELEASE = LocalDateTime.of(1895, 12, 28, 12, 0)
+			.atZone(ZoneId.of("Europe/Paris"))
+			.toInstant();
 
 	private static final FilmController filmController = new FilmController();
 	private static final UserController userController = new UserController();
@@ -31,7 +36,11 @@ class FilmorateApplicationTests {
 	User userWithoutName = new User("normName@mail", "normNameLogin",  MIN_TIME_OF_BIRTHDAY.plus(10000, ChronoUnit.HOURS));
 	User userOnlyNeeded = new User("normNeed@mail", "normNeedLogin");
 	//variants of normal films
-
+	Film filmAllField = new Film("normallName", "normallDescription", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS), Duration.ofMinutes(90));
+	Film filmWithoutDescription = new Film("descName",  MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS), Duration.ofMinutes(90));
+	Film filmWithoutReleaseDate = new Film("releaseName", "releaseDescription", Duration.ofMinutes(90));
+	Film filmWithoutDuration = new Film("duratName", "duratDescription", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS));
+	Film filmOnlyName =  new Film("onlyName");;
 
 	@BeforeEach
 	void cleanStorage(){
@@ -41,19 +50,19 @@ class FilmorateApplicationTests {
 
 	//сначала тесты для Users
 	@Test
-	void testGetReturnEmpty() {
+	void testUserGetReturnEmpty() {
 		assertEquals(0 , userController.getAllUsers().size());
 	}
 
 	@Test
-	void testPostGetReturnOneUser(){
+	void testUserPostGetReturnOneUser(){
 		userController.postUser(userAllField);
 		assertEquals(1 , userController.getAllUsers().size());
 		assertEquals("[" + userAllField.toString() + "]", userController.getAllUsers().toString());
 	}
 
 	@Test
-	void testPostGetReturnFourNormalTypeUsers(){
+	void testUserPostGetReturnFourNormalTypeUsers(){
 		userController.postUser(userAllField);
 		userController.postUser(userWithoutBirthday);
 		userController.postUser(userWithoutName);
@@ -62,61 +71,51 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void testPostSetID() {
+	void testUserPostSetID() {
 		User user = userController.postUser(userAllField);
 		assertNotNull(user.getId());
 	}
 
 	@Test
-	void testPostErrorEmailBlank() {
-		User userBlank = new User("   ", "dogLogin");
-		ValidationException exp = assertThrows(
+	void testUserPostErrorEmailBlank() {
+		User userBlank = new User("   ", "blankLogin");
+		ValidationException expBlank = assertThrows(
 				ValidationException.class, () -> userController.postUser(userBlank));
-		assertEquals("Емеил должен быть заполнен", exp.getMessage());
-	}
+		assertEquals("Емеил должен быть заполнен", expBlank.getMessage());
 
-	@Test
-	void testPostErrorEmailDogless() {
 		User userWithoutDog = new User("dogMail", "dogLogin");
-		ValidationException exp = assertThrows(
+		ValidationException expDog = assertThrows(
 				ValidationException.class, () -> userController.postUser(userWithoutDog));
-		assertEquals("Емаил должен содержать @", exp.getMessage());
-	}
+		assertEquals("Емаил должен содержать @", expDog.getMessage());
 
-	@Test
-	void testPostErrorEmailEmployed() {
 		User userMail = new User("Mail@", "mailLogin");
 		User userSameMail = new User("Mail@", "secondLogin");
 		userController.postUser(userMail);
-		DuplicatedDataException exp = assertThrows(
+		DuplicatedDataException expEmployed = assertThrows(
 				DuplicatedDataException.class, () -> userController.postUser(userSameMail));
-		assertEquals("Данный емеил занят", exp.getMessage());
+		assertEquals("Данный емеил занят", expEmployed.getMessage());
+	}
+
+		@Test
+	void testUserPostErrorLoginBlank() {
+		User userBlank = new User("mail@", "");
+		ValidationException expBlank = assertThrows(
+				ValidationException.class, () -> userController.postUser(userBlank));
+		assertEquals("Неверно указан логин", expBlank.getMessage());
+
+			User userSpace = new User("mail@", "with space");
+			ValidationException expSpace = assertThrows(
+					ValidationException.class, () -> userController.postUser(userSpace));
+			assertEquals("Логин не должен содержать пробелов", expSpace.getMessage());
+
+			User user = userController.postUser(userOnlyNeeded);
+			assertEquals(1 , userController.getAllUsers().size());
+			assertEquals(user.getName(), user.getLogin());
+
 	}
 
 	@Test
-	void testPostErrorLoginBlank() {
-		User user = new User("mail@", "");
-		ValidationException exp = assertThrows(
-				ValidationException.class, () -> userController.postUser(user));
-		assertEquals("Неверно указан логин", exp.getMessage());
-	}
-
-	@Test
-	void testPostErrorLoginSpace() {
-		User user = new User("mail@", "with space");
-		ValidationException exp = assertThrows(
-				ValidationException.class, () -> userController.postUser(user));
-		assertEquals("Логин не должен содержать пробелов", exp.getMessage());
-	}
-
-	@Test
-	void testPostWithoutNameAKALogin() {
-		User user = userController.postUser(userOnlyNeeded);
-		assertEquals(user.getName(), user.getLogin());
-	}
-
-	@Test
-	void testPostErrorBirthday(){
+	void testUserPostErrorBirthday(){
 		User userPast = new User("normName@mail", "normNameLogin",  MIN_TIME_OF_BIRTHDAY.minus(10000, ChronoUnit.HOURS));
 		User userFuture = new User("normName@mail", "normNameLogin",  Instant.now().plus(10000, ChronoUnit.HOURS));
 		ValidationException expPast = assertThrows(
@@ -128,7 +127,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void testPutReturnModified() {
+	void testUserPutReturnModified() {
 		User userOld = userController.postUser(userOnlyNeeded);
 		userOld.setName("newName");
 		userOld.setLogin("newLogin");
@@ -139,7 +138,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void testPutReturnModifiedAndOld() {
+	void testUserPutReturnModifiedAndOld() {
 		User userFirst = userController.postUser(userWithoutBirthday);
 		User userOld = userController.postUser(userOnlyNeeded);
 		userOld.setName("newName");
@@ -152,7 +151,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void testPutErrorBadId() {
+	void testUserPutErrorBadId() {
 		userController.postUser(userAllField);
 		userController.postUser(userWithoutBirthday);
 		userController.postUser(userWithoutName);
@@ -174,7 +173,7 @@ class FilmorateApplicationTests {
 	}
 
 	@Test
-	void testPutErrorEmail() {
+	void testUserPutErrorEmail() {
 		userController.postUser(userAllField);
 		userController.postUser(userWithoutBirthday);
 		userController.postUser(userWithoutName);
@@ -194,6 +193,165 @@ class FilmorateApplicationTests {
 
 
 	//FilmController
+	@Test
+	void testFilmGetReturnEmpty() {
+		assertEquals(0 , filmController.getAllFilms().size());
+	}
+
+	@Test
+	void testFilmPostGetReturnOneFilm(){
+		filmController.postFilm(filmAllField);
+		assertEquals(1 , filmController.getAllFilms().size());
+		assertEquals("[" + filmAllField.toString() + "]", filmController.getAllFilms().toString());
+	}
+
+	@Test
+	void testFilmPostGetReturnFiveNormalTypeFilms(){
+		filmController.postFilm(filmAllField);
+		filmController.postFilm(filmWithoutDescription);
+		filmController.postFilm(filmWithoutReleaseDate);
+		filmController.postFilm(filmWithoutDuration);
+		filmController.postFilm(filmOnlyName);
+		assertEquals(5 , filmController.getAllFilms().size());
+	}
+
+	@Test
+	void testFilmPostSetID() {
+		Film Film = filmController.postFilm(filmAllField);
+		assertNotNull(Film.getId());
+	}
+
+	@Test
+	void testFilmPostErrorName() {
+		Film FilmBlank = new Film("   ");
+		ValidationException exp = assertThrows(
+				ValidationException.class, () -> filmController.postFilm(FilmBlank));
+		assertEquals("Незаполненно поле Название фильма", exp.getMessage());
+	}
+
+	@Test
+	void testFilmPostErrorDescription() {
+		String noLongDescrip = "L".repeat(200);
+		Film FilmNoLongDescrip = new Film("notLongName", noLongDescrip);
+		filmController.postFilm(FilmNoLongDescrip);
+		assertEquals(1 , filmController.getAllFilms().size());
+
+		String soLongDescrip = "L".repeat(201);
+		Film FilmsoLongDescrip = new Film("soLongName", soLongDescrip);
+		ValidationException exp = assertThrows(
+				ValidationException.class, () -> filmController.postFilm(FilmsoLongDescrip));
+		assertEquals("Максимальная длина описания — 200 символов", exp.getMessage());
+	}
+
+	@Test
+	void testFilmPostErrorRelease() {
+		Film FilmEarlyRelease = new Film("earlyReleaseName", MIN_TIME_OF_RELEASE.minus(6000, ChronoUnit.HOURS));
+		Film FilmMinRelease = new Film("minReleaseName", MIN_TIME_OF_RELEASE);
+		Film FilmNormRelease = new Film("normReleaseName", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS));
+		Film FilmMaxRelease = new Film("maxReleaseName", Instant.now());
+		Film FilmLateRelease = new Film("lateReleaseName", Instant.now().plus(6000, ChronoUnit.HOURS));
+		ValidationException expEarly = assertThrows(
+				ValidationException.class, () -> filmController.postFilm(FilmEarlyRelease));
+		assertEquals("Дата релиза указана неверно", expEarly.getMessage());
+		filmController.postFilm(FilmMinRelease);
+		filmController.postFilm(FilmNormRelease);
+		filmController.postFilm(FilmMaxRelease);
+		assertEquals(3 , filmController.getAllFilms().size());
+		ValidationException expLate = assertThrows(
+				ValidationException.class, () -> filmController.postFilm(FilmLateRelease));
+		assertEquals("Дата релиза указана неверно", expLate.getMessage());
+	}
+
+	@Test
+	void testFilmPutReturnModified() {
+		Film FilmOld = filmController.postFilm(filmOnlyName);
+		FilmOld.setName("newName");
+		FilmOld.setDescription("newDescription");
+		FilmOld.setReleaseDate(Instant.now().minus(10000, ChronoUnit.HOURS));
+		Film FilmNew = filmController.putFilm(FilmOld);
+		assertEquals(1 , filmController.getAllFilms().size());
+		assertEquals(FilmOld.toString() , FilmNew.toString());
+	}
+
+	@Test
+	void testFilmPutReturnModifiedAndOld() {
+		Film FilmFirst = filmController.postFilm(filmWithoutDescription);
+		Film FilmOld = filmController.postFilm(filmOnlyName);
+		FilmOld.setName("newName");
+		FilmOld.setDescription("newDescription");
+		FilmOld.setReleaseDate(Instant.now().minus(10000, ChronoUnit.HOURS));
+		filmController.putFilm(FilmOld);
+		assertEquals(2 , filmController.getAllFilms().size());
+		assertEquals("[" + FilmFirst.toString()+ ", " + FilmOld.toString() + "]",
+				filmController.getAllFilms().toString());
+	}
+
+	@Test
+	void testFilmPutErrorBadId() {
+		filmController.postFilm(filmAllField);
+		filmController.postFilm(filmWithoutDescription);
+		filmController.postFilm(filmWithoutReleaseDate);
+		filmController.postFilm(filmOnlyName);
+
+		Film FilmNullId = filmAllField;
+		FilmNullId.setId(null);
+		ValidationException expNull = assertThrows(
+				ValidationException.class, () -> filmController.putFilm(FilmNullId));
+		assertEquals("Id должен быть указан", expNull.getMessage());
+
+		Film FilmBadId = filmAllField;
+		FilmBadId.setId((long)7);
+		ValidationException expBad = assertThrows(
+				ValidationException.class, () -> filmController.putFilm(FilmBadId));
+		assertEquals("Фильма с таким ID не существует", expBad.getMessage());
+
+		assertEquals(4 , filmController.getAllFilms().size());
+	}
+
+	@Test
+	void testFilmPutErrorName() {
+		Film FilmBlank = new Film((long)3, "   ");
+		ValidationException exp = assertThrows(
+				ValidationException.class, () -> filmController.postFilm(FilmBlank));
+		assertEquals("Незаполненно поле Название фильма", exp.getMessage());
+	}
+
+	@Test
+	void testFilmPutErrorDescription() {
+		filmController.postFilm(filmOnlyName);
+		String noLongDescrip = "L".repeat(200);
+		Film filmNoLongDescrip = new Film((long)1, "notLongName");
+		filmNoLongDescrip.setDescription(noLongDescrip);
+		filmController.putFilm(filmNoLongDescrip);
+		assertEquals(1 , filmController.getAllFilms().size());
+
+		String soLongDescrip = "L".repeat(201);
+		Film filmSoLongDescrip = new Film((long)1, "soLongName");
+		filmSoLongDescrip.setDescription(soLongDescrip);
+		ValidationException exp = assertThrows(
+				ValidationException.class, () -> filmController.putFilm(filmSoLongDescrip));
+		assertEquals("Максимальная длина описания — 200 символов", exp.getMessage());
+	}
+
+	@Test
+	void testFilmPutErrorRelease() {
+		filmController.postFilm(filmOnlyName);
+		Film FilmEarlyRelease = new Film((long)1, "earlyReleaseName", MIN_TIME_OF_RELEASE.minus(6000, ChronoUnit.HOURS));
+		Film FilmMinRelease = new Film((long)1, "minReleaseName", MIN_TIME_OF_RELEASE);
+		Film FilmNormRelease = new Film((long)1, "normReleaseName", MIN_TIME_OF_RELEASE.plus(6000, ChronoUnit.HOURS));
+		Film FilmMaxRelease = new Film((long)1, "maxReleaseName", Instant.now());
+		Film FilmLateRelease = new Film((long)1, "lateReleaseName", Instant.now().plus(6000, ChronoUnit.HOURS));
+		ValidationException expEarly = assertThrows(
+				ValidationException.class, () -> filmController.putFilm(FilmEarlyRelease));
+		assertEquals("Дата релиза указана неверно", expEarly.getMessage());
+		filmController.putFilm(FilmMinRelease);
+		filmController.putFilm(FilmNormRelease);
+		filmController.putFilm(FilmMaxRelease);
+		assertEquals(1 , filmController.getAllFilms().size());
+		ValidationException expLate = assertThrows(
+				ValidationException.class, () -> filmController.putFilm(FilmLateRelease));
+		assertEquals("Дата релиза указана неверно", expLate.getMessage());
+	}
 
 
 
