@@ -50,7 +50,7 @@ public class UserController {
         return ++currentMaxId;
     }
 
-    private void validateUser (User newUser) throws ValidationException, DuplicatedDataException {
+    private void validateUser(User newUser) throws ValidationException, DuplicatedDataException {
         //mail
         if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
             String message = "Емеил должен быть заполнен";
@@ -123,8 +123,6 @@ public class UserController {
             log.warn(message);
             throw new ValidationException(message);
         }
-
-
 
 
     }

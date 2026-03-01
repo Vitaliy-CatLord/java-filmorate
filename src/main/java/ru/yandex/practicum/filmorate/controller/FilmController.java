@@ -51,7 +51,7 @@ public class FilmController {
         return filmStorage.values();
     }
 
-    private void validateFilm (Film newFilm) throws ValidationException {
+    private void validateFilm(Film newFilm) throws ValidationException {
         if (newFilm.getName() == null || newFilm.getName().isBlank()) {
             throw new ValidationException("Незаполненно поле Название фильма");
         }
@@ -60,7 +60,7 @@ public class FilmController {
                     MAX_FILM_DESCRIPTION_LENGTH));
         }
         if (newFilm.getReleaseDate() != null && (newFilm.getReleaseDate().isBefore(MIN_TIME_OF_RELEASE)
-                                                    || newFilm.getReleaseDate().isAfter(LocalDate.now()))) {
+                || newFilm.getReleaseDate().isAfter(LocalDate.now()))) {
             throw new ValidationException("Дата релиза указана неверно");
         }
         if (newFilm.getDuration() != null && newFilm.getDuration() < 0) {
