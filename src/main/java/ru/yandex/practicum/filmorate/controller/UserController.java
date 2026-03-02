@@ -97,27 +97,28 @@ public class UserController {
         //верификация для изменения учетки по совпадению тройки id-mail-login
         if (usersStorage.containsKey(newUser.getId())) {
             User oldUser = usersStorage.get(newUser.getId());
-            if (oldUser.getEmail().equals(newUser.getEmail())
-                    && oldUser.getLogin().equals(newUser.getLogin())) {
-                if (!newUser.getEmail().isBlank()) {
-                    oldUser.setEmail(newUser.getEmail());
-                }
-                if (newUser.getName() != null && !newUser.getName().isBlank()) {
-                    oldUser.setName(newUser.getName());
-                }
-                if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
-                    oldUser.setLogin(newUser.getLogin());
-                }
-                if (newUser.getBirthday() != null && newUser.getBirthday().isBefore(MIN_TIME_OF_BIRTHDAY)) {
-                    oldUser.setBirthday(newUser.getBirthday());
-                }
-                log.info("Изменен пользователь. Новые данные: {}", oldUser);
-                return oldUser;
-            } else {
-                String message = "Емаил и/или логин не соответствует ID";
-                log.warn(message);
-                throw new DuplicatedDataException(message);
+//            if (oldUser.getEmail().equals(newUser.getEmail())
+//                    && oldUser.getLogin().equals(newUser.getLogin())) {
+            if (!newUser.getEmail().isBlank()) {
+                oldUser.setEmail(newUser.getEmail());
             }
+            if (newUser.getName() != null && !newUser.getName().isBlank()) {
+                oldUser.setName(newUser.getName());
+            }
+            if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
+                oldUser.setLogin(newUser.getLogin());
+            }
+            if (newUser.getBirthday() != null && newUser.getBirthday().isAfter(MIN_TIME_OF_BIRTHDAY)
+                    && newUser.getBirthday().isBefore(LocalDate.now())) {
+                oldUser.setBirthday(newUser.getBirthday());
+            }
+            log.info("Изменен пользователь. Новые данные: {}", oldUser);
+            return oldUser;
+//            } else {
+//                String message = "Емаил и/или логин не соответствует ID";
+//                log.warn(message);
+//                throw new DuplicatedDataException(message);
+//            }
         } else {
             String message = "Пользователя с таким ID не существует";
             log.warn(message);
