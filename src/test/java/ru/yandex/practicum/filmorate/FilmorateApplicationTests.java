@@ -85,7 +85,7 @@ class FilmorateApplicationTests {
         userController.postUser(userMail);
         DuplicatedDataException expEmployed = assertThrows(
                 DuplicatedDataException.class, () -> userController.postUser(userSameMail));
-        assertEquals("Емеил " + userSameMail.getEmail() +" занят", expEmployed.getMessage());
+        assertEquals("Емеил " + userSameMail.getEmail() + " занят", expEmployed.getMessage());
     }
 
     @Test
