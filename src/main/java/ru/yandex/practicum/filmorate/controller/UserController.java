@@ -90,7 +90,7 @@ public class UserController {
     private User setOldUser(User newUser) {
 
         if (newUser.getId() == null) {
-            String message = "Id должен быть указан";
+            String message = "Идентификатор должен быть указан";
             log.warn(message);
             throw new ValidationException(message);
         }
@@ -120,7 +120,7 @@ public class UserController {
 //                throw new DuplicatedDataException(message);
 //            }
         } else {
-            String message = "Пользователя с таким ID не существует";
+            String message = "Пользователя с Идентификатором " + newUser.getId() + " не существует";
             log.warn(message);
             throw new ValidationException(message);
         }
@@ -131,7 +131,7 @@ public class UserController {
     private void isEmailEmployed(User newUser) {
         if (usersStorage.values().stream()
                 .anyMatch(oldUser -> newUser.getEmail().equals(oldUser.getEmail()))) {
-            String message = "Данный емеил занят";
+            String message = "Емеил " + newUser.getEmail() + " занят";
             log.warn(message);
             throw new DuplicatedDataException(message);
         }

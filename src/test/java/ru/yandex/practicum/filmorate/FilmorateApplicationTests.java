@@ -85,7 +85,7 @@ class FilmorateApplicationTests {
         userController.postUser(userMail);
         DuplicatedDataException expEmployed = assertThrows(
                 DuplicatedDataException.class, () -> userController.postUser(userSameMail));
-        assertEquals("Данный емеил занят", expEmployed.getMessage());
+        assertEquals("Емеил " + userSameMail.getEmail() +" занят", expEmployed.getMessage());
     }
 
     @Test
@@ -153,13 +153,13 @@ class FilmorateApplicationTests {
         userNullId.setId(null);
         ValidationException expNull = assertThrows(
                 ValidationException.class, () -> userController.putUser(userNullId));
-        assertEquals("Id должен быть указан", expNull.getMessage());
+        assertEquals("Идентификатор должен быть указан", expNull.getMessage());
 
         User userBadId = userAllField;
         userBadId.setId((long) 7);
         ValidationException expBad = assertThrows(
                 ValidationException.class, () -> userController.putUser(userBadId));
-        assertEquals("Пользователя с таким ID не существует", expBad.getMessage());
+        assertEquals("Пользователя с Идентификатором " + userBadId.getId() + " не существует", expBad.getMessage());
 
         assertEquals(4, userController.getAllUsers().size());
     }
@@ -289,13 +289,13 @@ class FilmorateApplicationTests {
         filmNullId.setId(null);
         ValidationException expNull = assertThrows(
                 ValidationException.class, () -> filmController.putFilm(filmNullId));
-        assertEquals("Id должен быть указан", expNull.getMessage());
+        assertEquals("Идентификатор должен быть указан", expNull.getMessage());
 
         Film filmBadId = filmAllField;
         filmBadId.setId((long) 7);
         ValidationException expBad = assertThrows(
                 ValidationException.class, () -> filmController.putFilm(filmBadId));
-        assertEquals("Фильма с таким ID не существует", expBad.getMessage());
+        assertEquals("Фильма с ID " + filmBadId.getId() + " не существует", expBad.getMessage());
 
         assertEquals(4, filmController.getAllFilms().size());
     }

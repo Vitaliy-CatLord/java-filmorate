@@ -70,7 +70,7 @@ public class FilmController {
 
     private Film setOldFilm(Film newFilm) throws ValidationException {
         if (newFilm.getId() == null) {
-            String message = "Id должен быть указан";
+            String message = "Идентификатор должен быть указан";
             log.warn(message);
             throw new ValidationException(message);
         }
@@ -104,7 +104,7 @@ public class FilmController {
             log.info("Изменен фильм, новые данные: {}", oldFilm);
             return oldFilm;
         } else {
-            throw new ValidationException("Фильма с таким ID не существует");
+            throw new ValidationException("Фильма с ID " + newFilm.getId() + " не существует");
         }
     }
 
