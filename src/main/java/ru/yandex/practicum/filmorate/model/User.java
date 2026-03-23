@@ -4,16 +4,18 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(of = {"id", "email"})
 public class User {
 
-    Long id;
-    String email;
-    String login;
-    String name;
-    LocalDate birthday;
+    private Long id;
+    private String email;
+    private String login;
+    private String name;
+    private LocalDate birthday;
+    private Set<Long> friends;
 
     public User() {
     }

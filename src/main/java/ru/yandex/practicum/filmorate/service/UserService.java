@@ -1,53 +1,49 @@
-package ru.yandex.practicum.filmorate.controller;
+package ru.yandex.practicum.filmorate.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 
-@RestController
-@RequestMapping("/users")
-public class UserController {
-    private final Map<Long, User> usersStorage = new HashMap<>();
-    private final Logger log = LoggerFactory.getLogger(UserController.class);
+@Service
+@Slf4j
+public class UserService {
+    private final UserStorage usersStorage;
+    //private final Logger log = LoggerFactory.getLogger(UserController.class);
 
     private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
-    @PostMapping
+    public UserService(UserStorage usersStorage) {
+        this.usersStorage = usersStorage;
+    }
+
+    public Collection<User> getAllUsers() {
+        return usersStorage.getUsers();
+    }
+
+
     public User postUser(@RequestBody User newUser) throws ValidationException {
         validateUser(newUser);
         isEmailEmployed(newUser);
-        newUser.setId(getNextId());
-        usersStorage.put(newUser.getId(), newUser);
+        usersStorage.create(newUser);
         log.info("Создан новый юзер {}", newUser);
         return newUser;
     }
 
-    @PutMapping
     public User putUser(@RequestBody User newUser) throws ValidationException {
         validateUser(newUser);
         return setOldUser(newUser);
     }
 
-    @GetMapping
-    public Collection<User> getAllUsers() {
-        return usersStorage.values();
-    }
-
-    private long getNextId() {
-        long currentMaxId = usersStorage.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    public void cleanStorage() {
+        usersStorage.cleanStorage();
     }
 
     private void validateUser(User newUser) throws ValidationException, DuplicatedDataException {
@@ -95,23 +91,23 @@ public class UserController {
             throw new ValidationException(message);
         }
         //верификация для изменения учетки по совпадению id
-        if (usersStorage.containsKey(newUser.getId())) {
-            User oldUser = usersStorage.get(newUser.getId());
+        if (usersStorage.findById(newUser.getId()).isPresent()) {
+            Optional<User> oldUser = usersStorage.findById(newUser.getId());
             if (!newUser.getEmail().isBlank()) {
-                oldUser.setEmail(newUser.getEmail());
+                oldUser.get().setEmail(newUser.getEmail());
             }
             if (newUser.getName() != null && !newUser.getName().isBlank()) {
-                oldUser.setName(newUser.getName());
+                oldUser.get().setName(newUser.getName());
             }
             if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
-                oldUser.setLogin(newUser.getLogin());
+                oldUser.get().setLogin(newUser.getLogin());
             }
             if (newUser.getBirthday() != null && newUser.getBirthday().isAfter(MIN_TIME_OF_BIRTHDAY)
                     && newUser.getBirthday().isBefore(LocalDate.now())) {
-                oldUser.setBirthday(newUser.getBirthday());
+                oldUser.get().setBirthday(newUser.getBirthday());
             }
             log.info("Изменен пользователь. Новые данные: {}", oldUser);
-            return oldUser;
+            return oldUser.orElse(null);
         } else {
             String message = "Пользователя с Идентификатором " + newUser.getId() + " не существует";
             log.warn(message);
@@ -122,7 +118,7 @@ public class UserController {
     }
 
     private void isEmailEmployed(User newUser) {
-        if (usersStorage.values().stream()
+        if (usersStorage.getUsers().stream()
                 .anyMatch(oldUser -> newUser.getEmail().equals(oldUser.getEmail()))) {
             String message = "Емеил " + newUser.getEmail() + " занят";
             log.warn(message);
@@ -131,7 +127,5 @@ public class UserController {
 
     }
 
-    public void cleanStorage() {
-        usersStorage.clear();
-    }
+
 }
