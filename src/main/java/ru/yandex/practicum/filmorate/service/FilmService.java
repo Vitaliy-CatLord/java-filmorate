@@ -1,37 +1,40 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.exception.NotFoudException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Comparator;
+import java.util.List;
+
 
 @Service
 @Slf4j
 public class FilmService {
-    private final Map<Long, Film> filmStorage = new HashMap<>();
+    private final FilmStorage filmStorage;
+    private final UserService userService;
     //private final Logger log = LoggerFactory.getLogger(FilmController.class);
 
     private static final int MAX_FILM_DESCRIPTION_LENGTH = 200;
     private static final LocalDate MIN_TIME_OF_RELEASE = LocalDate.of(1895, 12, 28);
+    private final Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
 
-    @PostMapping
-    public Film postFilm(@RequestBody Film newFilm) {
+    public FilmService(FilmStorage filmStorage, UserService userService) {
+        this.filmStorage = filmStorage;
+        this.userService = userService;
+    }
+
+    public Film createFilm(Film newFilm) {
         try {
             validateFilm(newFilm);
-            newFilm.setId(getNextId());
-            filmStorage.put(newFilm.getId(), newFilm);
+            filmStorage.create(newFilm);
             log.info("Добавлен фильм: {}", newFilm);
             return newFilm;
         } catch (ValidationException e) {
@@ -40,8 +43,7 @@ public class FilmService {
         }
     }
 
-    @PutMapping
-    public Film putFilm(@RequestBody Film newFilm) {
+    public Film updateFilm(Film newFilm) {
         try {
             validateFilm(newFilm);
             return setOldFilm(newFilm);
@@ -51,9 +53,42 @@ public class FilmService {
         }
     }
 
-    @GetMapping
+
     public Collection<Film> getAllFilms() {
-        return filmStorage.values();
+        return filmStorage.getFilms();
+    }
+
+    public Film getFilmById(Long id) {
+        return filmStorage.findById(id)
+                .orElseThrow(() -> new NotFoudException("Фильм с id " + id + " не найден"));
+
+    }
+
+    public void addLike (Long filmId, Long userId) {
+        Film film = getFilmById(filmId);
+        User user = userService.getUserById(userId);
+
+        film.getLikesUserId().add(userId);
+        log.info("Пользователь {} поставил лайк фильму {}.", user.getName(), film.getName());
+    }
+
+    public void removeLike (Long filmId, Long userId) {
+        Film film = getFilmById(filmId);
+        User user = userService.getUserById(userId);
+
+        film.getLikesUserId().remove(userId);
+        log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
+    }
+
+    public List<Film> getTopFilms (int countOfTop) {
+        if (countOfTop < 0) {
+            throw new ValidationException("Число наиболее популярных фильмов не может быть отрицательным");
+        }
+        log.info("Получение топ {} по количеству лайков", countOfTop);
+        return filmStorage.getFilms().stream()
+                .sorted(filmLikesComparator.reversed())
+                .limit(countOfTop)
+                .toList();
     }
 
     private void validateFilm(Film newFilm) throws ValidationException {
@@ -80,8 +115,8 @@ public class FilmService {
             throw new ValidationException(message);
         }
         //верификация фильма только по id, остальные поля могут все же совпадать
-        if (filmStorage.containsKey(newFilm.getId())) {
-            Film oldFilm = filmStorage.get(newFilm.getId());
+        if (filmStorage.findById(newFilm.getId()).isPresent()) {
+            Film oldFilm = filmStorage.findById(newFilm.getId()).get();
 
             if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
                 oldFilm.setName(newFilm.getName());
@@ -114,16 +149,7 @@ public class FilmService {
     }
 
 
-    private long getNextId() {
-        long currentMaxId = filmStorage.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
-    }
-
     public void cleanStorage() {
-        filmStorage.clear();
+        filmStorage.cleanStorage();
     }
 }

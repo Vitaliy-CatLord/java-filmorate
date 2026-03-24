@@ -4,20 +4,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.NotFoudException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class UserService {
     private final UserStorage usersStorage;
     //private final Logger log = LoggerFactory.getLogger(UserController.class);
-
     private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
     public UserService(UserStorage usersStorage) {
@@ -28,8 +28,13 @@ public class UserService {
         return usersStorage.getUsers();
     }
 
+    public User getUserById(Long id) {
+        return usersStorage.findById(id)
+                .orElseThrow(() -> new NotFoudException("Пользователь с id " + id + " не найден"));
+    }
 
-    public User postUser(@RequestBody User newUser) throws ValidationException {
+
+    public User createUser(@RequestBody User newUser) throws ValidationException {
         validateUser(newUser);
         isEmailEmployed(newUser);
         usersStorage.create(newUser);
@@ -37,16 +42,58 @@ public class UserService {
         return newUser;
     }
 
-    public User putUser(@RequestBody User newUser) throws ValidationException {
+    public User updateUser(@RequestBody User newUser) throws ValidationException {
         validateUser(newUser);
         return setOldUser(newUser);
+    }
+
+    public void addFriend (Long userId, Long friendId){
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+        if (user.equals(friend)){
+            throw new ValidationException("Нельзя добавить в друзья себя");
+        }
+        user.getFriendsId().add(friendId);
+        friend.getFriendsId().add(userId);
+        log.info("Пользователь {} теперь друзья с {}.", user.getName(),friend.getName());
+    }
+
+    public void removeFriend (Long userId, Long friendId){
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+        if (user.equals(friend)){
+            throw new ValidationException("Нельзя удалить из друзья себя");
+        }
+        user.getFriendsId().remove(friendId);
+        friend.getFriendsId().remove(userId);
+
+        log.info("Пользователь {} больше не дружит с {}.", user.getName(),friend.getName());
+    }
+
+    public Collection<User> getUserFriends(Long id) {
+        User user = getUserById(id);
+        return user.getFriendsId().stream()
+                .map(this::getUserById)
+                .collect(Collectors.toList());
+    }
+
+    public Collection<User> getCommonFriends(Long userId, Long friendId) {
+        User user = getUserById(userId);
+        User friend = getUserById(friendId);
+        //Set<Long> friendFriendsSet = new HashSet<>(friend.getFriendsId());
+        return user.getFriendsId().stream()
+                .filter(friend.getFriendsId()::contains)
+                .map(this::getUserById)
+                .collect(Collectors.toList());
     }
 
     public void cleanStorage() {
         usersStorage.cleanStorage();
     }
 
-    private void validateUser(User newUser) throws ValidationException, DuplicatedDataException {
+
+
+    private void validateUser(User newUser) throws ValidationException {
         //mail
         if (newUser.getEmail() == null || newUser.getEmail().isBlank()) {
             String message = "Емеил должен быть заполнен";
@@ -92,29 +139,27 @@ public class UserService {
         }
         //верификация для изменения учетки по совпадению id
         if (usersStorage.findById(newUser.getId()).isPresent()) {
-            Optional<User> oldUser = usersStorage.findById(newUser.getId());
+            User oldUser = usersStorage.findById(newUser.getId()).get();
             if (!newUser.getEmail().isBlank()) {
-                oldUser.get().setEmail(newUser.getEmail());
+                oldUser.setEmail(newUser.getEmail());
             }
             if (newUser.getName() != null && !newUser.getName().isBlank()) {
-                oldUser.get().setName(newUser.getName());
+                oldUser.setName(newUser.getName());
             }
             if (newUser.getLogin() != null && !newUser.getLogin().isBlank()) {
-                oldUser.get().setLogin(newUser.getLogin());
+                oldUser.setLogin(newUser.getLogin());
             }
             if (newUser.getBirthday() != null && newUser.getBirthday().isAfter(MIN_TIME_OF_BIRTHDAY)
                     && newUser.getBirthday().isBefore(LocalDate.now())) {
-                oldUser.get().setBirthday(newUser.getBirthday());
+                oldUser.setBirthday(newUser.getBirthday());
             }
             log.info("Изменен пользователь. Новые данные: {}", oldUser);
-            return oldUser.orElse(null);
+            return oldUser;
         } else {
             String message = "Пользователя с Идентификатором " + newUser.getId() + " не существует";
             log.warn(message);
             throw new ValidationException(message);
         }
-
-
     }
 
     private void isEmailEmployed(User newUser) {
