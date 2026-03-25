@@ -14,19 +14,19 @@ public class ErrorHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler
-    public ErrorResponse handleValidateException(final ValidationException e){
+    public ErrorResponse handleValidateException(final ValidationException e) {
         return new ErrorResponse(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler
-    public ErrorResponse handleNotFoudException(final NotFoudException e){
+    public ErrorResponse handleNotFoudException(final NotFoudException e) {
         return new ErrorResponse(e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     @ExceptionHandler
-    public ErrorResponse handleThrowable(final Throwable e){
+    public ErrorResponse handleThrowable(final Throwable e) {
         return new ErrorResponse(e.getMessage());
     }
 

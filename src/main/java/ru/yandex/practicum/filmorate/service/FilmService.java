@@ -7,7 +7,6 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -64,7 +63,7 @@ public class FilmService {
 
     }
 
-    public void addLike (Long filmId, Long userId) {
+    public void addLike(Long filmId, Long userId) {
         Film film = getFilmById(filmId);
         User user = userService.getUserById(userId);
 
@@ -72,7 +71,7 @@ public class FilmService {
         log.info("Пользователь {} поставил лайк фильму {}.", user.getName(), film.getName());
     }
 
-    public void removeLike (Long filmId, Long userId) {
+    public void removeLike(Long filmId, Long userId) {
         Film film = getFilmById(filmId);
         User user = userService.getUserById(userId);
 
@@ -80,7 +79,7 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
 
-    public List<Film> getTopFilms (int countOfTop) {
+    public List<Film> getTopFilms(int countOfTop) {
         if (countOfTop < 0) {
             throw new ValidationException("Число наиболее популярных фильмов не может быть отрицательным");
         }

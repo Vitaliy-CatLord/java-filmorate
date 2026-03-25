@@ -11,15 +11,12 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class UserService {
     private final UserStorage usersStorage;
-    //private final Logger log = LoggerFactory.getLogger(UserController.class);
     private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
     public UserService(UserStorage usersStorage) {
@@ -49,27 +46,27 @@ public class UserService {
         return setOldUser(newUser);
     }
 
-    public void addFriend (Long userId, Long friendId){
+    public void addFriend(Long userId, Long friendId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        if (user.equals(friend)){
+        if (user.equals(friend)) {
             throw new ValidationException("Нельзя добавить в друзья себя");
         }
         user.getFriendsId().add(friendId);
         friend.getFriendsId().add(userId);
-        log.info("Пользователь {} теперь друзья с {}.", user.getName(),friend.getName());
+        log.info("Пользователь {} теперь друзья с {}.", user.getName(), friend.getName());
     }
 
-    public void removeFriend (Long userId, Long friendId){
+    public void removeFriend(Long userId, Long friendId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        if (user.equals(friend)){
+        if (user.equals(friend)) {
             throw new ValidationException("Нельзя удалить из друзья себя");
         }
         user.getFriendsId().remove(friendId);
         friend.getFriendsId().remove(userId);
 
-        log.info("Пользователь {} больше не дружит с {}.", user.getName(),friend.getName());
+        log.info("Пользователь {} больше не дружит с {}.", user.getName(), friend.getName());
     }
 
     public Collection<User> getUserFriends(Long id) {
@@ -92,7 +89,6 @@ public class UserService {
     public void cleanStorage() {
         usersStorage.cleanStorage();
     }
-
 
 
     private void validateUser(User newUser) throws ValidationException {
