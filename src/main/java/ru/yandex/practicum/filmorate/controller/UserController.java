@@ -43,15 +43,15 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public void makeFriend(@PathVariable Long userId, Long friendId) {
-        log.info("Выполнение запроса пользователя c ID {} на дружбу c {}", userId, friendId );
-        userService.addFriend(userId, friendId);
+    public void makeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.info("Выполнение запроса пользователя c ID {} на дружбу c {}", id, friendId );
+        userService.addFriend(id, friendId);
     }
 
     @DeleteMapping("{id}/friends/{friendId}")
-    public void removeFriend(@PathVariable Long userId, Long friendId) {
-        log.info("Выполнение запроса пользователя c ID {} на аннулирование дружбы c {}", userId, friendId);
-        userService.removeFriend(userId, friendId);
+    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.info("Выполнение запроса пользователя c ID {} на аннулирование дружбы c {}", id, friendId);
+        userService.removeFriend(id, friendId);
     }
 
     @GetMapping("/{id}/friends")
@@ -61,7 +61,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
-    public Collection<User> getUserFriends(@PathVariable Long id, Long otherId) {
+    public Collection<User> getUserFriends(@PathVariable Long id, @PathVariable Long otherId) {
         log.info("Выполнение запроса на получение списка общих друзей пользователя с ID {}" +
                 " и пользователя {}", id, otherId);
         return userService.getCommonFriends(id, otherId);

@@ -11,6 +11,8 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -158,7 +160,7 @@ public class UserService {
         } else {
             String message = "Пользователя с Идентификатором " + newUser.getId() + " не существует";
             log.warn(message);
-            throw new ValidationException(message);
+            throw new NotFoudException(message);
         }
     }
 

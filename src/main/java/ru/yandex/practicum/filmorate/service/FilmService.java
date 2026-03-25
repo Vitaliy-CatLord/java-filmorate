@@ -144,7 +144,7 @@ public class FilmService {
             log.info("Изменен фильм, новые данные: {}", oldFilm);
             return oldFilm;
         } else {
-            throw new ValidationException("Фильма с ID " + newFilm.getId() + " не существует");
+            throw new NotFoudException("Фильма с ID " + newFilm.getId() + " не существует");
         }
     }
 
