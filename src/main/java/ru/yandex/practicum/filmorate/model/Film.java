@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -11,14 +12,15 @@ import java.util.Set;
  */
 @Data
 @EqualsAndHashCode(of = "id")
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
 
-    private Long id;
-    private String name;
-    private String description;
-    private LocalDate releaseDate;
-    private Integer duration;
-    private Set<Long> likesUserId = new HashSet<>();
+    Long id;
+    String name;
+    String description;
+    LocalDate releaseDate;
+    Integer duration;
+    Set<Long> likesUserId = new HashSet<>();
 
     public Film() {
     }

@@ -14,6 +14,11 @@ import java.util.Collection;
 public class UserController {
     private final UserService userService;
 
+    private final static String SETTING_FRIENDS_PATH = "/{id}/friends/{friendId}";
+    private final static String FRIENDS_LIST_PATH = "/{id}/friends";
+    private final static String COMMON_FRIENDS_PATH = "/{id}/friends/common/{otherId}";
+
+
     public UserController(UserService userService) {
         this.userService = userService;
     }
@@ -42,25 +47,25 @@ public class UserController {
         return userService.updateUser(newUser);
     }
 
-    @PutMapping("/{id}/friends/{friendId}")
+    @PutMapping(SETTING_FRIENDS_PATH)
     public void makeFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Выполнение запроса пользователя c ID {} на дружбу c {}", id, friendId);
         userService.addFriend(id, friendId);
     }
 
-    @DeleteMapping("{id}/friends/{friendId}")
+    @DeleteMapping(SETTING_FRIENDS_PATH)
     public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
         log.info("Выполнение запроса пользователя c ID {} на аннулирование дружбы c {}", id, friendId);
         userService.removeFriend(id, friendId);
     }
 
-    @GetMapping("/{id}/friends")
+    @GetMapping(FRIENDS_LIST_PATH)
     public Collection<User> getUserFriends(@PathVariable Long id) {
         log.info("Выполнение запроса на получение списка друзей пользователя с ID {}", id);
         return userService.getUserFriends(id);
     }
 
-    @GetMapping("/{id}/friends/common/{otherId}")
+    @GetMapping(COMMON_FRIENDS_PATH)
     public Collection<User> getUserFriends(@PathVariable Long id, @PathVariable Long otherId) {
         log.info("Выполнение запроса на получение списка общих друзей пользователя с ID {}" +
                 " и пользователя {}", id, otherId);

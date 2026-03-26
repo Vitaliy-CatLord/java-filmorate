@@ -16,6 +16,8 @@ public class FilmController {
 
     private final FilmService filmService;
 
+    private static final String SETTING_LIKES = "/{id}/like/{userId}";
+
     public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }
@@ -44,13 +46,13 @@ public class FilmController {
         return filmService.updateFilm(newFilm);
     }
 
-    @PutMapping("/{id}/like/{userId}")
+    @PutMapping(SETTING_LIKES)
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Выполнение запроса на добавление фильму с ID {} лайка от  пользователя с ID {}", id, userId);
         filmService.addLike(id, userId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
+    @DeleteMapping(SETTING_LIKES)
     public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Выполнение запроса на удаление у фильма с ID {} лайка от  пользователя с ID {}", id, userId);
         filmService.removeLike(id, userId);

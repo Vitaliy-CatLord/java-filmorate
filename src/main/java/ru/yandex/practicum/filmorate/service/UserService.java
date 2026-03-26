@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,9 +17,10 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserService {
-    private final UserStorage usersStorage;
-    private static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
+    final UserStorage usersStorage;
+    static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
     public UserService(UserStorage usersStorage) {
         this.usersStorage = usersStorage;

@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoudException;
@@ -16,14 +18,14 @@ import java.util.List;
 
 @Service
 @Slf4j
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FilmService {
-    private final FilmStorage filmStorage;
-    private final UserService userService;
-    //private final Logger log = LoggerFactory.getLogger(FilmController.class);
+    FilmStorage filmStorage;
+    UserService userService;
 
-    private static final int MAX_FILM_DESCRIPTION_LENGTH = 200;
-    private static final LocalDate MIN_TIME_OF_RELEASE = LocalDate.of(1895, 12, 28);
-    private final Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
+    static int MAX_FILM_DESCRIPTION_LENGTH = 200;
+    static LocalDate MIN_TIME_OF_RELEASE = LocalDate.of(1895, 12, 28);
+    Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
 
     public FilmService(FilmStorage filmStorage, UserService userService) {
         this.filmStorage = filmStorage;
