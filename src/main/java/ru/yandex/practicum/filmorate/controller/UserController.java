@@ -14,9 +14,9 @@ import java.util.Collection;
 public class UserController {
     private final UserService userService;
 
-    private final static String SETTING_FRIENDS_PATH = "/{id}/friends/{friendId}";
-    private final static String FRIENDS_LIST_PATH = "/{id}/friends";
-    private final static String COMMON_FRIENDS_PATH = "/{id}/friends/common/{otherId}";
+    private static final String SETTING_FRIENDS_PATH = "/{id}/friends/{friendId}";
+    private static final String FRIENDS_LIST_PATH = "/{id}/friends";
+    private static final String COMMON_FRIENDS_PATH = "/{id}/friends/common/{otherId}";
 
 
     public UserController(UserService userService) {
