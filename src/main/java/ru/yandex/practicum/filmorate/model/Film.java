@@ -2,14 +2,13 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.model.enums.Genre;
+import ru.yandex.practicum.filmorate.model.enums.MpaRating;
 
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Film.
- */
 @Data
 @EqualsAndHashCode(of = "id")
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -21,6 +20,8 @@ public class Film {
     LocalDate releaseDate;
     Integer duration;
     Set<Long> likesUserId = new HashSet<>();
+    Set<Genre> genres = new HashSet<>();
+    MpaRating mpaRating;
 
     public Film() {
     }
