@@ -4,9 +4,12 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.model.enums.FriendshipStatus;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -19,7 +22,7 @@ public class User {
     String login;
     String name;
     LocalDate birthday;
-    Set<Long> friendsId = new HashSet<>();
+    Map<Long, FriendshipStatus> friendsList = new HashMap<>();
 
     public User() {
     }

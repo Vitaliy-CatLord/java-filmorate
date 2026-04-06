@@ -49,8 +49,14 @@ public class UserController {
 
     @PutMapping(SETTING_FRIENDS_PATH)
     public void makeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Выполнение запроса пользователя c ID {} на дружбу c {}", id, friendId);
+        log.info("Выполнение запроса пользователя c ID {} на создание заявки на дружбу c {}", id, friendId);
         userService.addFriend(id, friendId);
+    }
+
+    @PutMapping(SETTING_FRIENDS_PATH + "/confirm")
+    public void confirmFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.info("Выполнение запроса пользователя c ID {} на подтверждение дружбы c {}", id, friendId);
+        userService.confirmFriend(id, friendId);
     }
 
     @DeleteMapping(SETTING_FRIENDS_PATH)
