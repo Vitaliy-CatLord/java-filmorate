@@ -1,4 +1,4 @@
-CREATE TABLE "User" (
+CREATE TABLE "user" (
   "id" bigint PRIMARY KEY,
   "email" varchar NOT NULL,
   "login" varchar,
@@ -6,28 +6,28 @@ CREATE TABLE "User" (
   "birthday" date
 );
 
-CREATE TABLE "FriendList" (
+CREATE TABLE "friendList" (
   "id" integer PRIMARY KEY,
   "user_id" bigint,
   "friend_id" bigint,
   "friendshipStatus_id" integer
 );
 
-CREATE TABLE "FriendshipStatus" (
+CREATE TABLE "friendshipStatus" (
   "friendshipStatus_id" integer PRIMARY KEY,
   "statusName" varchar NOT NULL
 );
 
-CREATE TABLE "Film" (
+CREATE TABLE "film" (
   "id" bigint PRIMARY KEY,
   "name" varchar NOT NULL,
   "description" varchar,
   "releaseDate" date,
   "duration" integer,
-  "mpaPating_id" integer
+  "mpaRating_id" integer
 );
 
-CREATE TABLE "LikesUserId" (
+CREATE TABLE "likes" (
   "id" bigint PRIMARY KEY,
   "film_id" bigint,
   "user_id" bigint
@@ -39,42 +39,42 @@ CREATE TABLE "film_genres" (
   "genre_id" integer
 );
 
-CREATE TABLE "Genre" (
+CREATE TABLE "genre" (
   "genre_id" integer PRIMARY KEY,
   "name" varchar NOT NULL
 );
 
-CREATE TABLE "MpaRating" (
+CREATE TABLE "mpaRating" (
   "mpaRating_id" integer PRIMARY KEY,
   "name" varchar NOT NULL
 );
 
-ALTER TABLE "LikesUserId" ADD FOREIGN KEY ("film_id") REFERENCES "Film" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "likes" ADD FOREIGN KEY ("film_id") REFERENCES "film" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "LikesUserId" ADD FOREIGN KEY ("user_id") REFERENCES "User" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "likes" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "FriendshipStatus" ADD FOREIGN KEY ("friendshipStatus_id") REFERENCES "FriendList" ("friendshipStatus_id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "friendshipStatus" ADD FOREIGN KEY ("friendshipStatus_id") REFERENCES "friendList" ("friendshipStatus_id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "FriendList" ADD FOREIGN KEY ("friend_id") REFERENCES "User" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "friendList" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "film_genres" ADD FOREIGN KEY ("film_id") REFERENCES "Film" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "friendList" ADD FOREIGN KEY ("friend_id") REFERENCES "user" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "film_genres" ADD FOREIGN KEY ("genre_id") REFERENCES "Genre" ("genre_id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "film_genres" ADD FOREIGN KEY ("film_id") REFERENCES "film" ("id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "Film" ADD FOREIGN KEY ("mpaPating_id") REFERENCES "MpaRating" ("mpaRating_id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "film_genres" ADD FOREIGN KEY ("genre_id") REFERENCES "genre" ("genre_id") DEFERRABLE INITIALLY IMMEDIATE;
 
-ALTER TABLE "FriendList" ADD FOREIGN KEY ("user_id") REFERENCES "User" ("id") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "film" ADD FOREIGN KEY ("mpaRating_id") REFERENCES "mpaRating" ("mpaRating_id") DEFERRABLE INITIALLY IMMEDIATE;
 
 -- Defer constraint checking for INSERT
 BEGIN;
 SET CONSTRAINTS ALL DEFERRED;
 
-INSERT INTO "FriendshipStatus" ("friendshipStatus_id", "statusName")
+INSERT INTO "friendshipStatus" ("friendshipStatus_id", "statusName")
 VALUES
   (1, 'REQUEST'),
   (2, 'UNCONFIRMED'),
   (3, 'CONFIRMED');
-INSERT INTO "Genre" ("genre_id", "name")
+INSERT INTO "genre" ("genre_id", "name")
 VALUES
   (1, 'COMEDY '),
   (2, 'DRAMA'),
@@ -96,7 +96,7 @@ VALUES
   (18, 'SPORT'),
   (19, 'WAR'),
   (20, 'FAMILY');
-INSERT INTO "MpaRating" ("mpaRating_id", "name")
+INSERT INTO "mpaRating" ("mpaRating_id", "name")
 VALUES
   (1, 'G'),
   (2, 'PG'),
