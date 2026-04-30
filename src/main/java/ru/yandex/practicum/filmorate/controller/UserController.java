@@ -47,34 +47,34 @@ public class UserController {
         return userService.updateUser(newUser);
     }
 
-    @PutMapping(SETTING_FRIENDS_PATH)
-    public void makeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Выполнение запроса пользователя c ID {} на создание заявки на дружбу c {}", id, friendId);
-        userService.addFriend(id, friendId);
-    }
-
-    @PutMapping(SETTING_FRIENDS_PATH + "/confirm")
-    public void confirmFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Выполнение запроса пользователя c ID {} на подтверждение дружбы c {}", id, friendId);
-        userService.confirmFriend(id, friendId);
-    }
-
-    @DeleteMapping(SETTING_FRIENDS_PATH)
-    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.info("Выполнение запроса пользователя c ID {} на аннулирование дружбы c {}", id, friendId);
-        userService.removeFriend(id, friendId);
-    }
-
-    @GetMapping(FRIENDS_LIST_PATH)
-    public Collection<User> getUserFriends(@PathVariable Long id) {
-        log.info("Выполнение запроса на получение списка друзей пользователя с ID {}", id);
-        return userService.getUserFriends(id);
-    }
-
-    @GetMapping(COMMON_FRIENDS_PATH)
-    public Collection<User> getUserFriends(@PathVariable Long id, @PathVariable Long otherId) {
-        log.info("Выполнение запроса на получение списка общих друзей пользователя с ID {}" +
-                " и пользователя {}", id, otherId);
-        return userService.getCommonFriends(id, otherId);
-    }
+//    @PutMapping(SETTING_FRIENDS_PATH)
+//    public void makeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+//        log.info("Выполнение запроса пользователя c ID {} на создание заявки на дружбу c {}", id, friendId);
+//        userService.addFriend(id, friendId);
+//    }
+//
+//    @PutMapping(SETTING_FRIENDS_PATH + "/confirm")
+//    public void confirmFriend(@PathVariable Long id, @PathVariable Long friendId) {
+//        log.info("Выполнение запроса пользователя c ID {} на подтверждение дружбы c {}", id, friendId);
+//        userService.confirmFriend(id, friendId);
+//    }
+//
+//    @DeleteMapping(SETTING_FRIENDS_PATH)
+//    public void removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+//        log.info("Выполнение запроса пользователя c ID {} на аннулирование дружбы c {}", id, friendId);
+//        userService.removeFriend(id, friendId);
+//    }
+//
+//    @GetMapping(FRIENDS_LIST_PATH)
+//    public Collection<User> getUserFriends(@PathVariable Long id) {
+//        log.info("Выполнение запроса на получение списка друзей пользователя с ID {}", id);
+//        return userService.getUserFriends(id);
+//    }
+//
+//    @GetMapping(COMMON_FRIENDS_PATH)
+//    public Collection<User> getUserFriends(@PathVariable Long id, @PathVariable Long otherId) {
+//        log.info("Выполнение запроса на получение списка общих друзей пользователя с ID {}" +
+//                " и пользователя {}", id, otherId);
+//        return userService.getCommonFriends(id, otherId);
+//    }
 }

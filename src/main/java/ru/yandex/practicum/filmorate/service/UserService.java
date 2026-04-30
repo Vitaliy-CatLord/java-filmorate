@@ -52,78 +52,78 @@ public class UserService {
         return setOldUser(newUser);
     }
 
-    public void addFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        if (user.equals(friend)) {
-            throw new ValidationException("Нельзя добавить в друзья себя");
-        }
-        FriendshipStatus currentStatus = user.getFriendsList().get(friendId);
-        if (currentStatus != null) {
-            if (currentStatus.equals(FriendshipStatus.REQUEST)) {
-                throw new ValidationException("Заявка на дружбу с " + friend.getName() + " уже отправлена");
-            }
-            if (currentStatus.equals(FriendshipStatus.CONFIRMED)) {
-                throw new ValidationException("Пользователь " + friend.getName() + " уже в друзьях");
-            }
-        }
-        user.getFriendsList().put(friendId, FriendshipStatus.REQUEST);
-        friend.getFriendsList().put(userId, FriendshipStatus.UNCONFIRMED);
-        log.info("Пользователь {} отправил заявку на добавление в друзья {}.", user.getName(), friend.getName());
-    }
+//    public void addFriend(Long userId, Long friendId) {
+//        User user = getUserById(userId);
+//        User friend = getUserById(friendId);
+//        if (user.equals(friend)) {
+//            throw new ValidationException("Нельзя добавить в друзья себя");
+//        }
+//        FriendshipStatus currentStatus = user.getFriendsList().get(friendId);
+//        if (currentStatus != null) {
+//            if (currentStatus.equals(FriendshipStatus.REQUEST)) {
+//                throw new ValidationException("Заявка на дружбу с " + friend.getName() + " уже отправлена");
+//            }
+//            if (currentStatus.equals(FriendshipStatus.CONFIRMED)) {
+//                throw new ValidationException("Пользователь " + friend.getName() + " уже в друзьях");
+//            }
+//        }
+//        user.getFriendsList().put(friendId, FriendshipStatus.REQUEST);
+//        friend.getFriendsList().put(userId, FriendshipStatus.UNCONFIRMED);
+//        log.info("Пользователь {} отправил заявку на добавление в друзья {}.", user.getName(), friend.getName());
+//    }
 
-    public void confirmFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        if (user.equals(friend)) {
-            throw new ValidationException("Нельзя добавить в друзья себя");
-        }
-        FriendshipStatus status = user.getFriendsList().get(friendId);
-
-        if (status == null) {
-            throw new ValidationException("Пользователь " + friend.getName() + " не отправлял вам запрос в друзья");
-        }
-
-        if (status.equals(FriendshipStatus.CONFIRMED)) {
-            throw new ValidationException("Пользователь " + friend.getName() + " уже в друзьях");
-        }
-
-        // Для подтверждения нужна заявка в статусе UNCONFIRMED
-        if (!status.equals(FriendshipStatus.UNCONFIRMED)) {
-            throw new ValidationException("Невозможно подтвердить дружбу: неверный статус заявки");
-        }
-
-        user.getFriendsList().put(friendId, FriendshipStatus.CONFIRMED);
-        friend.getFriendsList().put(userId, FriendshipStatus.CONFIRMED);
-        log.info("Пользователь {} и {} теперь в друзьях у друг друга.", user.getName(), friend.getName());
-    }
-
-    public void removeFriend(Long userId, Long friendId) {
-        User user = getUserById(userId);
-        User friend = getUserById(friendId);
-        if (user.equals(friend)) {
-            throw new ValidationException("Нельзя удалить из друзья себя");
-        }
-        user.getFriendsList().remove(friendId);
-        friend.getFriendsList().remove(userId);
-
-        log.info("Пользователь {} больше не дружит с {}.", user.getName(), friend.getName());
-    }
-
-    public Collection<User> getUserFriends(Long id) {
-        return getConfirmedFriendsId(id).stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
-    }
-
-    public Collection<User> getCommonFriends(Long userId, Long friendId) {
-        Set<Long> userFriends = getConfirmedFriendsId(userId);
-        Set<Long> friendFriends = getConfirmedFriendsId(friendId);
-        userFriends.retainAll(friendFriends);
-        return userFriends.stream()
-                .map(this::getUserById)
-                .collect(Collectors.toList());
-    }
+//    public void confirmFriend(Long userId, Long friendId) {
+//        User user = getUserById(userId);
+//        User friend = getUserById(friendId);
+//        if (user.equals(friend)) {
+//            throw new ValidationException("Нельзя добавить в друзья себя");
+//        }
+//        FriendshipStatus status = user.getFriendsList().get(friendId);
+//
+//        if (status == null) {
+//            throw new ValidationException("Пользователь " + friend.getName() + " не отправлял вам запрос в друзья");
+//        }
+//
+//        if (status.equals(FriendshipStatus.CONFIRMED)) {
+//            throw new ValidationException("Пользователь " + friend.getName() + " уже в друзьях");
+//        }
+//
+//        // Для подтверждения нужна заявка в статусе UNCONFIRMED
+//        if (!status.equals(FriendshipStatus.UNCONFIRMED)) {
+//            throw new ValidationException("Невозможно подтвердить дружбу: неверный статус заявки");
+//        }
+//
+//        user.getFriendsList().put(friendId, FriendshipStatus.CONFIRMED);
+//        friend.getFriendsList().put(userId, FriendshipStatus.CONFIRMED);
+//        log.info("Пользователь {} и {} теперь в друзьях у друг друга.", user.getName(), friend.getName());
+//    }
+//
+//    public void removeFriend(Long userId, Long friendId) {
+//        User user = getUserById(userId);
+//        User friend = getUserById(friendId);
+//        if (user.equals(friend)) {
+//            throw new ValidationException("Нельзя удалить из друзья себя");
+//        }
+//        user.getFriendsList().remove(friendId);
+//        friend.getFriendsList().remove(userId);
+//
+//        log.info("Пользователь {} больше не дружит с {}.", user.getName(), friend.getName());
+//    }
+//
+//    public Collection<User> getUserFriends(Long id) {
+//        return getConfirmedFriendsId(id).stream()
+//                .map(this::getUserById)
+//                .collect(Collectors.toList());
+//    }
+//
+//    public Collection<User> getCommonFriends(Long userId, Long friendId) {
+//        Set<Long> userFriends = getConfirmedFriendsId(userId);
+//        Set<Long> friendFriends = getConfirmedFriendsId(friendId);
+//        userFriends.retainAll(friendFriends);
+//        return userFriends.stream()
+//                .map(this::getUserById)
+//                .collect(Collectors.toList());
+//    }
 
     public void cleanStorage() {
         usersStorage.cleanStorage();
@@ -199,13 +199,13 @@ public class UserService {
         }
     }
 
-    private Set<Long> getConfirmedFriendsId(Long id) {
-        User user = getUserById(id);
-        return  user.getFriendsList().entrySet().stream()
-                .filter(entry -> FriendshipStatus.CONFIRMED.equals(entry.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(Collectors.toSet());
-    }
+//    private Set<Long> getConfirmedFriendsId(Long id) {
+//        User user = getUserById(id);
+//        return  user.getFriendsList().entrySet().stream()
+//                .filter(entry -> FriendshipStatus.CONFIRMED.equals(entry.getValue()))
+//                .map(Map.Entry::getKey)
+//                .collect(Collectors.toSet());
+//    }
 
     private void isEmailEmployed(User newUser) {
         if (usersStorage.getUsers().stream()
