@@ -25,7 +25,7 @@ public class NewFilmRequest {
     LocalDate releaseDate;
     @Positive(message = "Продолжительность должна быть положительным числом")
     @NotNull(message = "Продолжительность не может быть пустой")
-    Long duration;
+    Integer duration;
     MpaRating mpaRating;
     Set<Genre> genres = new HashSet<>();
 }

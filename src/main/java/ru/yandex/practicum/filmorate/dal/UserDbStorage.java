@@ -14,14 +14,36 @@ import java.util.Optional;
 @Repository
 public class UserDbStorage extends BaseStorage<User> {
 
-    private static final String INSERT_QUERY = "INSERT INTO users (email, login, name, birthday) "
-            + "VALUES (?, ?, ?, ?) returning id";
+    private static final String INSERT_QUERY =
+            "INSERT INTO users (email, login, name, birthday) VALUES (?, ?, ?, ?) returning id";
     private static final String FIND_ALL_QUERY = "SELECT * FROM users";
     private static final String FIND_BY_EMAIL_QUERY = "SELECT * FROM users WHERE email = ?";
     private static final String FIND_BY_LOGIN_QUERY = "SELECT * FROM users WHERE login = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM users WHERE id = ?";
     private static final String UPDATE_QUERY = "UPDATE users SET email = ?, login = ?, name = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM users WHERE id = ?";
+
+    private static final String ADD_FRIEND_QUERY =
+            "INSERT INTO friendList(user_id, friend_id, friendshipStatus_id) VALUES (?, ?, CONFIRMED)";
+    private static final String REQUEST_FRIEND_QUERY =
+            "INSERT INTO friendList(user_id, friend_id, friendshipStatus_id) VALUES (?, ?, REQUEST)";
+    private static final String GET_FRIENDS_QUERY ="""
+            SELECT DISTINCT f1.friend_id
+              FROM friendList f1
+              JOIN friendshipStatus fs ON f1.friendshipStatus_id = fs.friendshipStatus_id
+              WHERE f1.user_id = ?
+                AND fs.statusName = ?
+            """;
+
+    private static final String GET_COMMON_FRIENDS_QUERY = """
+            SELECT DISTINCT f1.friend_id
+              FROM friendList f1
+              JOIN friendList f2 ON f1.friend_id = f2.friend_id
+              JOIN friendshipStatus fs ON f1.friendshipStatus_id = fs.friendshipStatus_id
+              WHERE f1.user_id = ?
+                AND f2.user_id = ?
+                AND fs.statusName = ?
+            """;
 
     public UserDbStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
@@ -67,5 +89,26 @@ public class UserDbStorage extends BaseStorage<User> {
 
     public boolean delete(long userId) {
        return delete(DELETE_QUERY, userId);
+    }
+
+
+    public void requestFriend (long userId, long friendId) {
+        jdbc.update(REQUEST_FRIEND_QUERY, userId, friendId);
+    }
+
+    public void addFriend (long userId, long friendId) {
+        jdbc.update(ADD_FRIEND_QUERY, userId, friendId);
+    }
+
+    public List<Long> getFriends (long userId) {
+        return jdbc.queryForList(GET_FRIENDS_QUERY, Long.class, userId, "CONFIRMED");
+    }
+
+    public List<Long> getCommonFriends (long userId, long anotherId) {
+        return jdbc.queryForList(GET_COMMON_FRIENDS_QUERY, Long.class, userId, anotherId, "CONFIRMED");
+    }
+
+    public void removeFriend (long userId, long friendId) {
+        jdbc.update(DELETE_QUERY, userId, friendId);
     }
 }
