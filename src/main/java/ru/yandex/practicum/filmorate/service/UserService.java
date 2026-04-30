@@ -1,33 +1,42 @@
 package ru.yandex.practicum.filmorate.service;
 
 import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
+import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoudException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.model.FriendshipStatus;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
+@RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserService {
-    final UserStorage usersStorage;
+    private final UserDbStorage usersStorage;
     static final LocalDate MIN_TIME_OF_BIRTHDAY = LocalDate.of(1909, 8, 21);
 
-    public UserService(UserStorage usersStorage) {
-        this.usersStorage = usersStorage;
+    public User createUser(@RequestBody User newUser) throws ValidationException {
+        validateUser(newUser);
+        isEmailEmployed(newUser);
+        usersStorage.create(newUser);
+        log.info("Создан новый юзер {}", newUser);
+        return newUser;
     }
+
+
+
+
+
+
 
     public Collection<User> getAllUsers() {
         return usersStorage.getUsers();
@@ -39,13 +48,7 @@ public class UserService {
     }
 
 
-    public User createUser(@RequestBody User newUser) throws ValidationException {
-        validateUser(newUser);
-        isEmailEmployed(newUser);
-        usersStorage.create(newUser);
-        log.info("Создан новый юзер {}", newUser);
-        return newUser;
-    }
+
 
     public User updateUser(@RequestBody User newUser) throws ValidationException {
         validateUser(newUser);
