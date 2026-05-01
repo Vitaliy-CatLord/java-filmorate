@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS friendList (
 CREATE TABLE IF NOT EXISTS likes (
   film_id BIGINT,
   user_id BIGINT,
-  PRIMARY KEY (user_id, film_id)
+  PRIMARY KEY (user_id, film_id),
   FOREIGN KEY (film_id) REFERENCES films (id),
   FOREIGN KEY (user_id) REFERENCES users (id)
 );
