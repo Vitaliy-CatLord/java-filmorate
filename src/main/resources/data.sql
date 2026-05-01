@@ -1,8 +1,8 @@
-MERGE  INTO friendshipStatus (friendshipStatus_id, statusName)
-VALUES
-  (1, 'REQUEST'),
-  (2, 'UNCONFIRMED'),
-  (3, 'CONFIRMED');
+--MERGE  INTO friendshipStatus (friendshipStatus_id, statusName)
+--VALUES
+--  (1, 'REQUEST'),
+--  (2, 'UNCONFIRMED'),
+--  (3, 'CONFIRMED');
 MERGE  INTO genres (genre_id, name)
 VALUES
   (1, 'COMEDY '),
