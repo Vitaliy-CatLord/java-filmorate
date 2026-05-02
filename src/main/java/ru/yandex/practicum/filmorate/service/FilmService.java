@@ -15,10 +15,7 @@ import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
-import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -39,14 +36,17 @@ public class FilmService {
 
 
     public FilmDto createFilm(NewFilmRequest request) {
-        if(request.getGenres() != null) {
-            for (Genre genre : request.getGenres()) {
-                genreStorage.findById(genre.getGenreId());
-            }
-        }
 
         if(request.getMpaRating() != null) {
-            ratingStorage.findById(request.getMpaRating().getMpaRatingId());
+            ratingStorage.findById(request.getMpaRating().getMpaRatingId())
+                    .orElseThrow(() -> new NotFoudException("Рейтинг не найден"));;
+        }
+
+        if(request.getGenres() != null) {
+            for (Genre genre : request.getGenres()) {
+                genreStorage.findById(genre.getGenreId())
+                        .orElseThrow(() -> new NotFoudException("Жанр не найден"));;
+            }
         }
 
         Film film = FilmMapper.mapToFilm(request);

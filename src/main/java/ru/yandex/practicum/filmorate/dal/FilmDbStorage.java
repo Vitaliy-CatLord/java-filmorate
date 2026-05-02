@@ -5,7 +5,9 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,7 +17,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
 
     private static final String INSERT_QUERY =
             "INSERT INTO films(name, description, releaseDate, duration, mpaRating_id)"
-            + "VALUES (?, ?, ?, ?, ?) returning id";
+            + "VALUES (?, ?, ?, ?, ?)";
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String FIND_BY_NAME_QUERY = "SELECT * FROM films WHERE name = ?";
@@ -46,10 +48,9 @@ public class FilmDbStorage extends BaseStorage<Film> {
     private static final String DELETE_FILM_GENRES_QUERY = "DELETE FROM film_genres WHERE film_id = ?";
 
     private static final String GET_FILM_RATING_QUERY = """
-            SELECT m.name
-            FROM mpa AS m
-            JOIN films AS f ON m.mpaRating_id = f.mpaRating_id
-            WHERE f.id = ?
+            SELECT *
+            FROM mpaRating
+            WHERE id = ?
             """ ;
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
@@ -65,19 +66,27 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 film.getDuration(),
                 film.getMpaRatingId());
         film.setId(id);
+        updateGenres(film);
+        loadLGR(film);
         return film;
     }
 
     public List<Film> findAll() {
-        return findMany(FIND_ALL_QUERY);
+        List<Film> films = findMany(FIND_ALL_QUERY);
+        films.forEach(this::loadLGR);
+        return films;
     }
 
     public Optional<Film> findById (long id) {
-        return findOne(FIND_BY_ID_QUERY, id);
+        Optional<Film> film = findOne(FIND_BY_ID_QUERY, id);
+        film.ifPresent(this::loadLGR);
+        return film;
     }
 
     public List<Film> findByName(String name) {
-        return findMany(FIND_BY_NAME_QUERY, name);
+        List<Film> films = findMany(FIND_BY_NAME_QUERY, name);
+        films.forEach(this::loadLGR);
+        return films;
     }
 
     public Film update(Film film) {
@@ -87,8 +96,11 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getMpaRatingId()
+                film.getMpaRatingId(),
+                film.getId()
         );
+        updateGenres(film);
+        loadLGR(film);
         return film;
     }
 
@@ -97,7 +109,9 @@ public class FilmDbStorage extends BaseStorage<Film> {
     }
 
     public List<Film> getTopFilms(int count) {
-        return findMany(GET_TOP_FILMS_QUERY, count);
+        List<Film> films = findMany(GET_TOP_FILMS_QUERY, count);
+        films.forEach(this::loadLGR);
+        return films;
     }
 
     public void addLike(long userId, long filmId) {
@@ -112,23 +126,76 @@ public class FilmDbStorage extends BaseStorage<Film> {
         jdbc.update(REMOVE_LIKE_QUERY, userId, filmId);
     }
 
-    public void updateGenres (Film film) {
-        //сначала удаляем все жанры, а потом добавляем имеющиеся у переданного фильма
+    public List<Genre> getFilmGenres(long filmId) {
+        return jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
+            Genre genre = new Genre();
+            genre.setGenreId(rs.getInt("genre_id"));
+            genre.setName(rs.getString("name"));
+            return genre;
+        }, filmId);
+    }
+
+    public MpaRating getFilmRating(long filmId) {
+        return jdbc.queryForObject(GET_FILM_RATING_QUERY, (rs, rowNum) -> {
+            MpaRating rating = new MpaRating();
+            rating.setName(rs.getString("name"));
+            return rating;
+        }, filmId);
+    }
+
+
+    public void updateGenres(Film film) {
+        //Удаляет все существующие связи
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
-        if (film.getGenres() != null) {
-            for (Genre genre : film.getGenres()) {
-                jdbc.update(ADD_GENRE_QUERY, film.getId(), genre.getGenreId());
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            for (Genre g : film.getGenres()) {
+                // Проверяем, что объект жанра не null и у него есть id
+                if (g != null && g.getGenreId() != null && g.getGenreId() > 0) {
+                    jdbc.update(ADD_GENRE_QUERY, film.getId(), g.getGenreId());
+                }
             }
         }
     }
 
-    public List<String> getFilmGenres (long filmId) {
-        return jdbc.queryForList(GET_FILM_GENRES_QUERY, String.class, filmId);
+    public void loadLGR(Film film) {
+        //Likes
+        List<Long> likes = jdbc.queryForList(GET_FILM_LIKES_QUERY, Long.class, film.getId());
+        film.setLikesUserId(new HashSet<>(likes));
+
+        //Genres
+        List<Genre> genres = jdbc.query(GET_FILM_GENRES_QUERY,
+                (rs, i) -> {
+                    Genre genre = new Genre();
+                    genre.setGenreId(rs.getInt("genre_id"));
+                    genre.setName(rs.getString("name"));
+                    return genre;
+                },
+                film.getId());
+        film.setGenres(new HashSet<>(genres));
+
+        //Rating
+        try {
+            MpaRating mpaRating = jdbc.queryForObject(GET_FILM_RATING_QUERY,
+                    (rs, rowNum) -> {
+                        MpaRating rating = new MpaRating();
+                        rating.setMpaRatingId(rs.getInt("mpaRating_id"));
+                        rating.setName(rs.getString("name"));
+                        return rating;
+                    },
+                    film.getId());
+            film.setMpaRating(mpaRating);
+        } catch (Exception e) {
+            // Если рейтинга нет, ничего не делаем
+        }
     }
-
-    public List<String> getFilmRating (long filmId) {
-        return jdbc.queryForList(GET_FILM_GENRES_QUERY, String.class, filmId);
-    }
+    ///
 
 
+    ///
+
+    //
+
+    ///
+    ///
 }
