@@ -30,7 +30,7 @@ public class RatingDbStorage extends BaseStorage<MpaRating> {
         return findMany(FIND_ALL_QUERY);
     }
 
-    public Optional<MpaRating> findById (long id) {
+    public Optional<MpaRating> findById(long id) {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
@@ -42,7 +42,7 @@ public class RatingDbStorage extends BaseStorage<MpaRating> {
         return mpaRating;
     }
 
-    public boolean delete (long id) {
+    public boolean delete(long id) {
         return delete(DELETE_QUERY, id);
     }
 }

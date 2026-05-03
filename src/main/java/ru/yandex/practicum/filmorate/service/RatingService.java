@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.RatingDbStorage;
-import ru.yandex.practicum.filmorate.exception.NotFoudException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class RatingService {
 
     public MpaRating getRatingById(long id) {
         return ratingDbStorage.findById(id)
-                .orElseThrow(() -> new NotFoudException("Рейтинг не найден"));
+                .orElseThrow(() -> new NotFoundException("Рейтинг не найден"));
     }
 
 }

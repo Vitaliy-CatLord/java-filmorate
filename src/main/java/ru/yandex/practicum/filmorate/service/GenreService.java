@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dal.GenreDbStorage;
-import ru.yandex.practicum.filmorate.exception.NotFoudException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class GenreService {
 
     public Genre getGenreById(long id) {
         return genreDbStorage.findById(id)
-                .orElseThrow(() -> new NotFoudException("Жанр не найден"));
+                .orElseThrow(() -> new NotFoundException("Жанр не найден"));
     }
 
 }

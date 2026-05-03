@@ -10,10 +10,4 @@ public class FriendshipStatus {
 
     Integer friendshipStatusId;
     String statusName;
-
-
-
-//    REQUEST,        // отправлен запрос на добавление
-//    UNCONFIRMED,    //не просмотрена или отказ
-//    CONFIRMED       // в друзьях у ДРУГ ДРУГА
 }

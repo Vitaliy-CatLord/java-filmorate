@@ -9,7 +9,7 @@ import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
-import ru.yandex.practicum.filmorate.exception.NotFoudException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -34,18 +34,19 @@ public class FilmService {
     Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
 
 
-
     public FilmDto createFilm(NewFilmRequest request) {
 
-        if(request.getMpaRating() != null) {
+        if (request.getMpaRating() != null) {
             ratingStorage.findById(request.getMpaRating().getMpaRatingId())
-                    .orElseThrow(() -> new NotFoudException("Рейтинг не найден"));;
+                    .orElseThrow(() -> new NotFoundException("Рейтинг не найден"));
+            ;
         }
 
-        if(request.getGenres() != null) {
+        if (request.getGenres() != null) {
             for (Genre genre : request.getGenres()) {
                 genreStorage.findById(genre.getGenreId())
-                        .orElseThrow(() -> new NotFoudException("Жанр не найден"));;
+                        .orElseThrow(() -> new NotFoundException("Жанр не найден"));
+                ;
             }
         }
 
@@ -56,15 +57,15 @@ public class FilmService {
 
     public FilmDto updateFilm(UpdateFilmRequest request) {
         Film film = filmStorage.findById(request.getId())
-                .orElseThrow(() -> new NotFoudException("Фильм с id " + request.getId() + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + request.getId() + " не найден"));
 
-        if(request.getGenres() != null) {
+        if (request.getGenres() != null) {
             for (Genre genre : request.getGenres()) {
                 genreStorage.findById(genre.getGenreId());
             }
         }
 
-        if(request.getMpaRating() != null) {
+        if (request.getMpaRating() != null) {
             ratingStorage.findById(request.getMpaRating().getMpaRatingId());
         }
 
@@ -83,14 +84,14 @@ public class FilmService {
     public FilmDto getFilmById(Long id) {
         return filmStorage.findById(id)
                 .map(FilmMapper::mapToFilmDto)
-                .orElseThrow(() -> new NotFoudException("Фильм с id " + id + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
     }
 
     public void addLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoudException("Фильм с id " + filmId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         User user = usersStorage.findById(userId)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
         filmStorage.addLike(userId, filmId);
         log.info("Пользователь {} поставил лайк фильму {}.", user.getName(), film.getName());
@@ -98,9 +99,9 @@ public class FilmService {
 
     public void removeLike(Long filmId, Long userId) {
         Film film = filmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoudException("Фильм с id " + filmId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         User user = usersStorage.findById(userId)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
         filmStorage.removeLike(userId, filmId);
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());

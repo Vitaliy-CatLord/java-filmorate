@@ -9,7 +9,7 @@ import ru.yandex.practicum.filmorate.dal.*;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
-import ru.yandex.practicum.filmorate.exception.NotFoudException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -26,7 +26,7 @@ public class UserService {
     public UserDto createUser(NewUserRequest request) {
         User user = UserMapper.mapToUser(request);
 
-        if(user.getName() == null || user.getName().isBlank()) {
+        if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
         }
 
@@ -43,14 +43,13 @@ public class UserService {
     public UserDto getUserById(Long id) {
         return usersStorage.findById(id)
                 .map(UserMapper::mapToUserDto)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + id + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + id + " не найден"));
     }
-
 
 
     public UserDto updateUser(UpdateUserRequest request) {
         User user = usersStorage.findById(request.getId())
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + request.getId() + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + request.getId() + " не найден"));
 
         UserMapper.updateUserFields(user, request);
         return UserMapper.mapToUserDto(usersStorage.update(user));
@@ -58,9 +57,9 @@ public class UserService {
 
     public void addFriend(Long userId, Long friendId) {
         usersStorage.findById(userId)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         usersStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoudException("Друг с id " + friendId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
         //первоначально была идея сделать добавление в друзья по схеме Request->Unconfirmed->Confirmed
         //затравка на эту схему есть в usersStorage.requestFriend(userId, friendId);
@@ -97,9 +96,9 @@ public class UserService {
 
     public void removeFriend(Long userId, Long friendId) {
         usersStorage.findById(userId)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         usersStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoudException("Друг с id " + friendId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
         usersStorage.removeFriend(userId, friendId);
         log.info("Пользователь ID {} больше не дружит с ID {}.", userId, friendId);
@@ -107,7 +106,7 @@ public class UserService {
 
     public List<UserDto> getUserFriends(Long userId) {
         usersStorage.findById(userId)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
         return usersStorage.getFriends(userId).stream()
                 .map(this::getUserById)
@@ -116,9 +115,9 @@ public class UserService {
 
     public List<UserDto> getCommonFriends(Long userId, Long friendId) {
         usersStorage.findById(userId)
-                .orElseThrow(() -> new NotFoudException("Пользователь с id " + userId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
         usersStorage.findById(friendId)
-                .orElseThrow(() -> new NotFoudException("Друг с id " + friendId + " не найден"));
+                .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
         return usersStorage.getCommonFriends(userId, friendId).stream()
                 .map(this::getUserById)

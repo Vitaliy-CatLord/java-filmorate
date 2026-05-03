@@ -31,7 +31,7 @@ public class GenreDbStorage extends BaseStorage<Genre> {
         return findMany(FIND_ALL_QUERY);
     }
 
-    public Optional<Genre> findById (long id) {
+    public Optional<Genre> findById(long id) {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
@@ -48,7 +48,7 @@ public class GenreDbStorage extends BaseStorage<Genre> {
         return genre;
     }
 
-    public boolean delete (long id) {
+    public boolean delete(long id) {
         return delete(DELETE_QUERY, id);
     }
 }

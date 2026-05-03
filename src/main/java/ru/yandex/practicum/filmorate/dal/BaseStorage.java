@@ -5,7 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
-import ru.yandex.practicum.filmorate.exception.InternalServerExeption;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -24,20 +24,21 @@ public class BaseStorage<T> {
                     .prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
 
             for (int idx = 0; idx < param.length; idx++) {
-                ps.setObject(idx+1, param[idx]);
+                ps.setObject(idx + 1, param[idx]);
             }
 
-            return ps;}, keyHolder);
+            return ps;
+        }, keyHolder);
 
         Long id = keyHolder.getKeyAs(Long.class);
-        if(id != null) {
+        if (id != null) {
             return id;
         } else {
-            throw new InternalServerExeption("Не удалось сохранить данные");
+            throw new InternalServerException("Не удалось сохранить данные");
         }
     }
 
-    protected Optional<T> findOne (String query, Object... params) {
+    protected Optional<T> findOne(String query, Object... params) {
         try {
             T result = jdbc.queryForObject(query, mapper, params);
             return Optional.ofNullable(result);
@@ -46,14 +47,14 @@ public class BaseStorage<T> {
         }
     }
 
-    protected List<T> findMany (String query, Object... params) {
+    protected List<T> findMany(String query, Object... params) {
         return jdbc.query(query, mapper, params);
     }
 
     protected void update(String query, Object... params) {
         int rowsDeleted = jdbc.update(query, params);
-        if(rowsDeleted == 0) {
-            throw new InternalServerExeption("Не удалось обновить данные");
+        if (rowsDeleted == 0) {
+            throw new InternalServerException("Не удалось обновить данные");
         }
     }
 
@@ -61,7 +62,6 @@ public class BaseStorage<T> {
         int rowsDeleted = jdbc.update(query, id);
         return rowsDeleted > 0;
     }
-
 
 
 }

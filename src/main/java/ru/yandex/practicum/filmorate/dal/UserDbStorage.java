@@ -22,7 +22,7 @@ public class UserDbStorage extends BaseStorage<User> {
 
     private static final String ADD_FRIEND_QUERY =
             "INSERT INTO friendList(user_id, friend_id) VALUES (?, ?)";
-    private static final String GET_FRIENDS_QUERY ="""
+    private static final String GET_FRIENDS_QUERY = """
             SELECT DISTINCT f1.friend_id
               FROM friendList f1
               WHERE f1.user_id = ?
@@ -82,22 +82,22 @@ public class UserDbStorage extends BaseStorage<User> {
     }
 
     public boolean delete(long userId) {
-       return delete(DELETE_QUERY, userId);
+        return delete(DELETE_QUERY, userId);
     }
 
-    public void addFriend (long userId, long friendId) {
+    public void addFriend(long userId, long friendId) {
         jdbc.update(ADD_FRIEND_QUERY, userId, friendId);
     }
 
-    public List<Long> getFriends (long userId) {
+    public List<Long> getFriends(long userId) {
         return jdbc.queryForList(GET_FRIENDS_QUERY, Long.class, userId);
     }
 
-    public List<Long> getCommonFriends (long userId, long anotherId) {
+    public List<Long> getCommonFriends(long userId, long anotherId) {
         return jdbc.queryForList(GET_COMMON_FRIENDS_QUERY, Long.class, userId, anotherId);
     }
 
-    public void removeFriend (long userId, long friendId) {
+    public void removeFriend(long userId, long friendId) {
         jdbc.update(DELETE_FRIEND_QUERY, userId, friendId);
     }
 }

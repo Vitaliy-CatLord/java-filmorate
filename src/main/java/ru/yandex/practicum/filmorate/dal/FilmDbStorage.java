@@ -8,10 +8,8 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -20,7 +18,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
 
     private static final String INSERT_QUERY =
             "INSERT INTO films(name, description, releaseDate, duration, mpaRating_id) "
-            + "VALUES (?, ?, ?, ?, ?)";
+                    + "VALUES (?, ?, ?, ?, ?)";
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String FIND_BY_NAME_QUERY = "SELECT * FROM films WHERE name = ?";
@@ -54,7 +52,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
             SELECT *
             FROM mpaRating
             WHERE mpaRating_id = ?
-            """ ;
+            """;
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
@@ -80,7 +78,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return films;
     }
 
-    public Optional<Film> findById (long id) {
+    public Optional<Film> findById(long id) {
         Optional<Film> film = findOne(FIND_BY_ID_QUERY, id);
         film.ifPresent(this::loadLGR);
         return film;
@@ -107,7 +105,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return film;
     }
 
-    public boolean delete (long id) {
+    public boolean delete(long id) {
         return delete(DELETE_QUERY, id);
     }
 
@@ -121,11 +119,11 @@ public class FilmDbStorage extends BaseStorage<Film> {
         jdbc.update(ADD_LIKE_QUERY, userId, filmId);
     }
 
-    public List<Long> getFilmLikes (long filmId) {
+    public List<Long> getFilmLikes(long filmId) {
         return jdbc.queryForList(GET_FILM_LIKES_QUERY, Long.class, filmId);
     }
 
-    public void removeLike (long userId, long filmId) {
+    public void removeLike(long userId, long filmId) {
         jdbc.update(REMOVE_LIKE_QUERY, userId, filmId);
     }
 
@@ -152,15 +150,25 @@ public class FilmDbStorage extends BaseStorage<Film> {
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            for (Genre g : film.getGenres()) {
+            List<Genre> uniqueGenres = film.getGenres().stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(
+                            Genre::getGenreId,
+                            genre -> genre,
+                            (existing, replacement) -> existing
+                    ))
+                    .values()
+                    .stream()
+                    .toList();
+            for (Genre g : uniqueGenres) {
                 // Проверяем, что объект жанра не null и у него есть id
-                if (g != null && g.getGenreId() >0 ) {
-                        jdbc.update(ADD_GENRE_QUERY, film.getId(), g.getGenreId());
+                if (g.getGenreId() > 0) {
+                    jdbc.update(ADD_GENRE_QUERY, film.getId(), g.getGenreId());
 
                 } else {
-                // Логирование или исключение для отладки
-                log.warn("Genre with null or invalid ID found: {}", g);
-            }
+                    // Логирование или исключение для отладки
+                    log.warn("Genre with null or invalid ID found: {}", g);
+                }
             }
         }
     }

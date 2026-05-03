@@ -30,7 +30,7 @@ public class FriendshipStatusDbStorage extends BaseStorage<FriendshipStatus> {
         return findMany(FIND_ALL_QUERY);
     }
 
-    public Optional<FriendshipStatus> findById (long id) {
+    public Optional<FriendshipStatus> findById(long id) {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
@@ -42,9 +42,9 @@ public class FriendshipStatusDbStorage extends BaseStorage<FriendshipStatus> {
         return friendshipStatus;
     }
 
-    public boolean delete (long id) {
+    public boolean delete(long id) {
         return delete(DELETE_QUERY, id);
     }
-    
-    
+
+
 }
