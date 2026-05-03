@@ -68,32 +68,6 @@ public class UserService {
         log.info("Пользователь  c ID {} отправил заявку на добавление в друзья ID {}.", userId, friendId);
     }
 
-//    public void confirmFriend(Long userId, Long friendId) {
-//        User user = getUserById(userId);
-//        User friend = getUserById(friendId);
-//        if (user.equals(friend)) {
-//            throw new ValidationException("Нельзя добавить в друзья себя");
-//        }
-//        FriendshipStatus status = user.getFriendsList().get(friendId);
-//
-//        if (status == null) {
-//            throw new ValidationException("Пользователь " + friend.getName() + " не отправлял вам запрос в друзья");
-//        }
-//
-//        if (status.equals(FriendshipStatus.CONFIRMED)) {
-//            throw new ValidationException("Пользователь " + friend.getName() + " уже в друзьях");
-//        }
-//
-//        // Для подтверждения нужна заявка в статусе UNCONFIRMED
-//        if (!status.equals(FriendshipStatus.UNCONFIRMED)) {
-//            throw new ValidationException("Невозможно подтвердить дружбу: неверный статус заявки");
-//        }
-//
-//        user.getFriendsList().put(friendId, FriendshipStatus.CONFIRMED);
-//        friend.getFriendsList().put(userId, FriendshipStatus.CONFIRMED);
-//        log.info("Пользователь {} и {} теперь в друзьях у друг друга.", user.getName(), friend.getName());
-//    }
-
     public void removeFriend(Long userId, Long friendId) {
         usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));

@@ -127,24 +127,6 @@ public class FilmDbStorage extends BaseStorage<Film> {
         jdbc.update(REMOVE_LIKE_QUERY, userId, filmId);
     }
 
-//    public List<Genre> getFilmGenres(long filmId) {
-//        return jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
-//            Genre genre = new Genre();
-//            genre.setGenreId(rs.getInt("genre_id"));
-//            genre.setName(rs.getString("name"));
-//            return genre;
-//        }, filmId);
-//    }
-//
-//    public MpaRating getFilmRating(long filmId) {
-//        return jdbc.queryForObject(GET_FILM_RATING_QUERY, (rs, rowNum) -> {
-//            MpaRating rating = new MpaRating();
-//            rating.setName(rs.getString("name"));
-//            return rating;
-//        }, filmId);
-//    }
-
-
     public void updateGenres(Film film) {
         //Удаляет все существующие связи
         jdbc.update(DELETE_FILM_GENRES_QUERY, film.getId());
@@ -161,13 +143,12 @@ public class FilmDbStorage extends BaseStorage<Film> {
                     .stream()
                     .toList();
             for (Genre g : uniqueGenres) {
-                // Проверяем, что объект жанра не null и у него есть id
                 if (g.getGenreId() > 0) {
                     jdbc.update(ADD_GENRE_QUERY, film.getId(), g.getGenreId());
 
                 } else {
                     // Логирование или исключение для отладки
-                    log.warn("Genre with null or invalid ID found: {}", g);
+                    log.warn("Жанр задан неверно: {}", g);
                 }
             }
         }
@@ -201,7 +182,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
                     film.getMpaRatingId());
             film.setMpaRating(mpaRating);
         } catch (Exception e) {
-            System.out.println("Error loading MPA rating: " + e.getMessage());
+            System.out.println("Ошибка загрузки рейтинга: " + e.getMessage());
         }
     }
 }

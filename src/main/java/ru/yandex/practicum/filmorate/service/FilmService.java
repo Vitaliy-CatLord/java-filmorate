@@ -39,14 +39,12 @@ public class FilmService {
         if (request.getMpaRating() != null) {
             ratingStorage.findById(request.getMpaRating().getMpaRatingId())
                     .orElseThrow(() -> new NotFoundException("Рейтинг не найден"));
-            ;
         }
 
         if (request.getGenres() != null) {
             for (Genre genre : request.getGenres()) {
                 genreStorage.findById(genre.getGenreId())
                         .orElseThrow(() -> new NotFoundException("Жанр не найден"));
-                ;
             }
         }
 
