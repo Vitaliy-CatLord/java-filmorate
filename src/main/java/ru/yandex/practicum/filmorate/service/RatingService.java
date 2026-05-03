@@ -14,14 +14,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RatingService {
-    RatingDbStorage ratingStorage;
+    RatingDbStorage ratingDbStorage;
 
     public List<MpaRating> getRating() {
-        return ratingStorage.findAll();
+        return ratingDbStorage.findAll();
     }
 
-    public MpaRating getRatingById(int id) {
-        return ratingStorage.findById(id)
+    public MpaRating getRatingById(long id) {
+        return ratingDbStorage.findById(id)
                 .orElseThrow(() -> new NotFoudException("Рейтинг не найден"));
     }
 

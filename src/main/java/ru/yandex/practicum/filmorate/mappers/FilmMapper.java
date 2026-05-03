@@ -6,6 +6,10 @@ import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewFilmRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
@@ -36,8 +40,11 @@ public class FilmMapper {
         dto.setDescription(film.getDescription());
         dto.setReleaseDate(film.getReleaseDate());
         dto.setDuration(film.getDuration());
-        dto.setMpaRatingId(film.getMpaRatingId());
-        dto.setGenres(film.getGenres());
+        dto.setMpa(film.getMpaRating());
+        dto.setGenres(film.getGenres()
+                .stream()
+                .sorted((Comparator.comparing(Genre::getGenreId)))
+                .collect(Collectors.toList()));
 
         return dto;
     }

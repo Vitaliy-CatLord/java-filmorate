@@ -5,9 +5,12 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.time.LocalDate;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -19,6 +22,6 @@ public class FilmDto {
     String description;
     LocalDate releaseDate;
     Integer duration;
-    Integer mpaRatingId;
-    Set<Genre> genres = new HashSet<>();
+    MpaRating mpa;
+    List<Genre> genres = new ArrayList<>();
 }

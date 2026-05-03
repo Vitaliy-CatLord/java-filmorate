@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dal;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
@@ -7,22 +8,24 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Repository
 public class FilmDbStorage extends BaseStorage<Film> {
 
 
     private static final String INSERT_QUERY =
-            "INSERT INTO films(name, description, releaseDate, duration, mpaRating_id)"
+            "INSERT INTO films(name, description, releaseDate, duration, mpaRating_id) "
             + "VALUES (?, ?, ?, ?, ?)";
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String FIND_BY_NAME_QUERY = "SELECT * FROM films WHERE name = ?";
     private static final String UPDATE_QUERY = "UPDATE films " +
-            "SET name = ?, description = ?, release_date = ?, duration = ?, mpaRating_id = ? WHERE id = ?";
+            "SET name = ?, description = ?, releaseDate = ?, duration = ?, mpaRating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
     private static final String GET_TOP_FILMS_QUERY = """
@@ -50,7 +53,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
     private static final String GET_FILM_RATING_QUERY = """
             SELECT *
             FROM mpaRating
-            WHERE id = ?
+            WHERE mpaRating_id = ?
             """ ;
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
@@ -126,22 +129,22 @@ public class FilmDbStorage extends BaseStorage<Film> {
         jdbc.update(REMOVE_LIKE_QUERY, userId, filmId);
     }
 
-    public List<Genre> getFilmGenres(long filmId) {
-        return jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
-            Genre genre = new Genre();
-            genre.setGenreId(rs.getInt("genre_id"));
-            genre.setName(rs.getString("name"));
-            return genre;
-        }, filmId);
-    }
-
-    public MpaRating getFilmRating(long filmId) {
-        return jdbc.queryForObject(GET_FILM_RATING_QUERY, (rs, rowNum) -> {
-            MpaRating rating = new MpaRating();
-            rating.setName(rs.getString("name"));
-            return rating;
-        }, filmId);
-    }
+//    public List<Genre> getFilmGenres(long filmId) {
+//        return jdbc.query(GET_FILM_GENRES_QUERY, (rs, rowNum) -> {
+//            Genre genre = new Genre();
+//            genre.setGenreId(rs.getInt("genre_id"));
+//            genre.setName(rs.getString("name"));
+//            return genre;
+//        }, filmId);
+//    }
+//
+//    public MpaRating getFilmRating(long filmId) {
+//        return jdbc.queryForObject(GET_FILM_RATING_QUERY, (rs, rowNum) -> {
+//            MpaRating rating = new MpaRating();
+//            rating.setName(rs.getString("name"));
+//            return rating;
+//        }, filmId);
+//    }
 
 
     public void updateGenres(Film film) {
@@ -151,9 +154,13 @@ public class FilmDbStorage extends BaseStorage<Film> {
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             for (Genre g : film.getGenres()) {
                 // Проверяем, что объект жанра не null и у него есть id
-                if (g != null && g.getGenreId() != null && g.getGenreId() > 0) {
-                    jdbc.update(ADD_GENRE_QUERY, film.getId(), g.getGenreId());
-                }
+                if (g != null && g.getGenreId() >0 ) {
+                        jdbc.update(ADD_GENRE_QUERY, film.getId(), g.getGenreId());
+
+                } else {
+                // Логирование или исключение для отладки
+                log.warn("Genre with null or invalid ID found: {}", g);
+            }
             }
         }
     }
@@ -172,7 +179,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
                     return genre;
                 },
                 film.getId());
-        film.setGenres(new HashSet<>(genres));
+        film.setGenres(new ArrayList<>(genres));
 
         //Rating
         try {
@@ -183,19 +190,10 @@ public class FilmDbStorage extends BaseStorage<Film> {
                         rating.setName(rs.getString("name"));
                         return rating;
                     },
-                    film.getId());
+                    film.getMpaRatingId());
             film.setMpaRating(mpaRating);
         } catch (Exception e) {
-            // Если рейтинга нет, ничего не делаем
+            System.out.println("Error loading MPA rating: " + e.getMessage());
         }
     }
-    ///
-
-
-    ///
-
-    //
-
-    ///
-    ///
 }

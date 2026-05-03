@@ -14,7 +14,7 @@ import java.util.Collection;
 @RequestMapping("/mpa")
 @RequiredArgsConstructor
 public class RatingController {
-    RatingService ratingService;
+    private final RatingService ratingService;
 
     @GetMapping
     public Collection<MpaRating> getAll() {
@@ -23,7 +23,7 @@ public class RatingController {
     }
 
     @GetMapping("/{id}")
-    public MpaRating getFilmById(@PathVariable int id) {
+    public MpaRating getFilmById(@PathVariable long id) {
         log.info("Выполнение запроса на получение рейтинга с ID {}", id);
         return ratingService.getRatingById(id);
     }

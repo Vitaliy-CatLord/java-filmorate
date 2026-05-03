@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -9,8 +10,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -26,6 +26,8 @@ public class NewFilmRequest {
     @Positive(message = "Продолжительность должна быть положительным числом")
     @NotNull(message = "Продолжительность не может быть пустой")
     Integer duration;
+
+    @JsonProperty("mpa")
     MpaRating mpaRating;
-    Set<Genre> genres = new HashSet<>();
+    List<Genre> genres;
 }

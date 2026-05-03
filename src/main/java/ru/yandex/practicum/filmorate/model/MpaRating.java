@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -8,13 +9,9 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MpaRating {
-
-    Integer mpaRatingId;
+    @JsonProperty("id")
+    int mpaRatingId;
+    @JsonProperty("name")
     String name;
 
-//    G,     // Нет возрастных ограничений
-//    PG,    // Рекомендуется присутствие родителей
-//    PG_13, // Не желателен для детей до 13 лет
-//    R,     // До 17 лет только с взрослым
-//    NC_17  // Запрещён для лиц до 18 лет
 }

@@ -14,15 +14,15 @@ public class GenreDbStorage extends BaseStorage<Genre> {
         super(jdbc, mapper);
     }
 
-    private static final String INSERT_QUERY = "INSERT INTO genre (name) VALUES (?) returning genre_id";
-    private static final String FIND_ALL_QUERY = "SELECT * FROM genre";
-    private static final String FIND_BY_NAME_QUERY = "SELECT * FROM genre WHERE name = ?";
-    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genre WHERE id = ?";
-    private static final String UPDATE_QUERY = "UPDATE genre SET name = ? WHERE id = ?";
-    private static final String DELETE_QUERY = "DELETE FROM genre WHERE id = ?";
+    private static final String INSERT_QUERY = "INSERT INTO genres (name) VALUES (?)";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
+    private static final String FIND_BY_NAME_QUERY = "SELECT * FROM genres WHERE name = ?";
+    private static final String FIND_BY_ID_QUERY = "SELECT * FROM genres WHERE genre_id = ?";
+    private static final String UPDATE_QUERY = "UPDATE genres SET name = ? WHERE genre_id = ?";
+    private static final String DELETE_QUERY = "DELETE FROM genres WHERE genre_id = ?";
 
     public Genre save(Genre genre) {
-        Integer id = (int) insert(INSERT_QUERY, genre.getName());
+        int id = (int) insert(INSERT_QUERY, genre.getName());
         genre.setGenreId(id);
         return genre;
     }
@@ -42,7 +42,8 @@ public class GenreDbStorage extends BaseStorage<Genre> {
     public Genre update(Genre genre) {
         update(
                 UPDATE_QUERY,
-                genre.getName()
+                genre.getName(),
+                genre.getGenreId()
         );
         return genre;
     }

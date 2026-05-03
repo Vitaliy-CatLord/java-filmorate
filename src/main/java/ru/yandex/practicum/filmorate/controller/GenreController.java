@@ -12,10 +12,10 @@ import java.util.Collection;
 @Slf4j
 @RestController
 @RestControllerAdvice
-@RequestMapping("/genre")
+@RequestMapping("/genres")
 @RequiredArgsConstructor
 public class GenreController {
-    GenreService genreService;
+    private final GenreService genreService;
 
     @GetMapping
     public Collection<Genre> getAll() {
@@ -24,7 +24,7 @@ public class GenreController {
     }
 
     @GetMapping("/{id}")
-    public Genre getFilmById(@PathVariable int id) {
+    public Genre getFilmById(@PathVariable long id) {
         log.info("Выполнение запроса на получение жанра с ID {}", id);
         return genreService.getGenreById(id);
     }

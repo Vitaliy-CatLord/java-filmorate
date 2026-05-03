@@ -14,14 +14,14 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class GenreService {
-    GenreDbStorage genreStorage;
+    GenreDbStorage genreDbStorage;
 
     public List<Genre> getGenres() {
-        return genreStorage.findAll();
+        return genreDbStorage.findAll();
     }
 
-    public Genre getGenreById(int id) {
-        return genreStorage.findById(id)
+    public Genre getGenreById(long id) {
+        return genreDbStorage.findById(id)
                 .orElseThrow(() -> new NotFoudException("Жанр не найден"));
     }
 

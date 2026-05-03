@@ -10,8 +10,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,7 +30,7 @@ public class UpdateFilmRequest {
     @NotNull(message = "Продолжительность не может быть пустой")
     Integer duration;
     MpaRating mpaRating;
-    Set<Genre> genres = new HashSet<>();
+    List<Genre> genres = new ArrayList<>();
 
     public boolean hasName() {
         return !(name == null || name.isBlank());

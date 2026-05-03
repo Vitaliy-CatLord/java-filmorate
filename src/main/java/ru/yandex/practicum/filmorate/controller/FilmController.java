@@ -25,7 +25,7 @@ public class FilmController {
 
     @PostMapping
     public FilmDto createFilm(@Valid @RequestBody NewFilmRequest newFilm) {
-        log.info("Выполнение запроса на добавление фильма {}", newFilm.getName());
+        log.info("Выполнение запроса на добавление фильма {}", newFilm);
         return filmService.createFilm(newFilm);
     }
 
