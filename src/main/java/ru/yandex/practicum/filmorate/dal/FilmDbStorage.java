@@ -26,16 +26,6 @@ public class FilmDbStorage extends BaseStorage<Film> {
             "SET name = ?, description = ?, releaseDate = ?, duration = ?, mpaRating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
-    private static final String GET_TOP_FILMS_QUERY = """
-            SELECT films.*
-            FROM films
-            LEFT JOIN likes ON films.id = likes.film_id
-            GROUP BY films.id
-            ORDER BY COUNT(likes.user_id) DESC
-            LIMIT ?
-            """;
-
-
     //если будет падать, добавить группировку по режиссеру
     private static final String GET_COMMON_FILMS_QUERY = """
             SELECT f.*
@@ -121,8 +111,47 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return delete(DELETE_QUERY, id);
     }
 
-    public List<Film> getTopFilms(int count) {
-        List<Film> films = findMany(GET_TOP_FILMS_QUERY, count);
+    /**
+     * Возвращает список популярных фильмов из базы данных с возможностью фильтрации.
+     * Строит динамический SQL-запрос в зависимости от переданных фильтров по жанру и году.
+     *
+     * @param count   ограничение количества записей (LIMIT)
+     * @param genreId ID жанра для фильтрации (если null, фильтр не применяется)
+     * @param year    год релиза для фильтрации (если null, фильтр не применяется)
+     * @return список объектов Film с заполненными связями
+     */
+    public List<Film> getTopFilms(int count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT f.* FROM films AS f ");
+        sql.append("LEFT JOIN likes AS l ON f.id = l.film_id ");
+
+        // Если задан жанр, добавляем таблицу film_genres
+        if (genreId != null) {
+            sql.append("LEFT JOIN film_genres AS fg ON f.id = fg.film_id ");
+        }
+
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        // Добавляем условие фильтрации по жанру
+        if (genreId != null) {
+            sql.append("AND fg.genre_id = ? ");
+            params.add(genreId);
+        }
+
+        // Добавляем условие фильтрации по году
+        if (year != null) {
+            sql.append("AND EXTRACT(YEAR FROM f.releaseDate) = ? ");
+            params.add(year);
+        }
+
+        sql.append("GROUP BY f.id ");
+        sql.append("ORDER BY COUNT(DISTINCT l.user_id) DESC ");
+        sql.append("LIMIT ?");
+        params.add(count);
+
+        List<Film> films = findMany(sql.toString(), params.toArray());
         films.forEach(this::loadLGR);
         return films;
     }

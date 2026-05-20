@@ -58,10 +58,14 @@ public class FilmController {
         filmService.removeLike(id, userId);
     }
 
+    // добавил возможность выбора жанра и года для вывода топ фильмов
     @GetMapping("/popular")
-    public List<FilmDto> getTopFilms(@RequestParam(value = "count", defaultValue = "10") Integer count) {
-        log.info("Выполнение запроса на получение ТОП{} популярных фильмов", count);
-        return filmService.getTopFilms(count);
+    public List<FilmDto> getTopFilms(
+            @RequestParam(value = "count", defaultValue = "10") Integer count,
+            @RequestParam(value = "genreId", required = false) Integer genreId,
+            @RequestParam(value = "year", required = false) Integer year) {
+        log.info("Выполнение запроса на получение ТОП{} популярных фильмов. Фильтры: genreId={}, year={}", count, genreId, year);
+        return filmService.getTopFilms(count, genreId, year);
     }
 
     @GetMapping("/common")

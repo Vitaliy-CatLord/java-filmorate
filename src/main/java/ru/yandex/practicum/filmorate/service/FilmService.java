@@ -104,12 +104,24 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
 
-    public List<FilmDto> getTopFilms(int countOfTop) {
-        if (countOfTop < 0) {
+    /**
+     * Возвращает список самых популярных фильмов, отфильтрованных по количеству лайков,
+     * а также опционально по жанру и/или году релиза.
+     *
+     * @param countOfTop максимальное количество возвращаемых фильмов (размер топа)
+     * @param genreId    идентификатор жанра для фильтрации (может быть null)
+     * @param year       год релиза для фильтрации (может быть null)
+     * @param-return список DTO популярных фильмов, соответствующих условиям
+     */
+    public List<FilmDto> getTopFilms(Integer countOfTop, Integer genreId, Integer year) {
+
+        int limit = (countOfTop == null) ? 10 : countOfTop; // страховка от null
+
+        if (limit < 0) {
             throw new ValidationException("Число наиболее популярных фильмов не может быть отрицательным");
         }
-        log.info("Получение топ {} по количеству лайков", countOfTop);
-        return filmStorage.getTopFilms(countOfTop)
+        log.info("Получение топ {} по количеству лайков. Фильтры: genreId={}, year={}", countOfTop, genreId, year);
+        return filmStorage.getTopFilms(limit, genreId, year)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
@@ -127,6 +139,5 @@ public class FilmService {
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
-
 
 }
