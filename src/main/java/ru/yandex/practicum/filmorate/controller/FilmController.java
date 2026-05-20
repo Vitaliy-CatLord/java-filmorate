@@ -64,4 +64,10 @@ public class FilmController {
         return filmService.getTopFilms(count);
     }
 
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        log.info("Выполнение запроса на получение общих фильмов юзеров {} и {}.", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
 }

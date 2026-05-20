@@ -35,6 +35,18 @@ public class FilmDbStorage extends BaseStorage<Film> {
             LIMIT ?
             """;
 
+
+    //если будет падать, добавить группировку по режиссеру
+    private static final String GET_COMMON_FILMS_QUERY = """
+            SELECT f.*
+            FROM films AS f
+            JOIN likes AS l1 ON f.id = l1.film_id AND l1.user_id = ?
+            JOIN likes AS l2 ON f.id = l2.film_id AND l2.user_id = ?
+            LEFT JOIN likes AS l_all ON f.id = l_all.film_id
+            GROUP BY f.id, f.name, f.description, f.releaseDate, f.duration, f.mpaRating_id
+            ORDER BY COUNT(l_all.user_id) DESC;
+            """;
+
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes (user_id, film_id) VALUES (?, ?)";
     private static final String GET_FILM_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
     private static final String REMOVE_LIKE_QUERY = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
@@ -111,6 +123,12 @@ public class FilmDbStorage extends BaseStorage<Film> {
 
     public List<Film> getTopFilms(int count) {
         List<Film> films = findMany(GET_TOP_FILMS_QUERY, count);
+        films.forEach(this::loadLGR);
+        return films;
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> films = findMany(GET_COMMON_FILMS_QUERY, userId, friendId);
         films.forEach(this::loadLGR);
         return films;
     }
