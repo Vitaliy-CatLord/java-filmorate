@@ -29,7 +29,6 @@ public class FilmService {
     FilmDbStorage filmStorage;
     RatingDbStorage ratingStorage;
     GenreDbStorage genreStorage;
-    FriendshipStatusDbStorage friendshipStatusStorage;
 
     Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
 
@@ -111,6 +110,19 @@ public class FilmService {
         }
         log.info("Получение топ {} по количеству лайков", countOfTop);
         return filmStorage.getTopFilms(countOfTop)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        usersStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
+
+        log.info("Получение общих фильмов юзеров {} и {}", userId, friendId);
+        return filmStorage.getCommonFilms(userId, friendId)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
