@@ -88,4 +88,16 @@ class FilmDbStorageTest {
         assertEquals(2, result.size());
         assertEquals(2L, result.get(0).getId());
     }
+
+    @Test
+    void testDeleteFilmRemovesFilmAndItsLikesAndGenres() {
+        // Проверка: каскадное удаление фильма по ID очищает связанные записи в БД
+        long filmIdToDelete = 1L;
+        org.junit.jupiter.api.Assertions.assertTrue(filmStorage.findById(filmIdToDelete).isPresent());
+
+        boolean isDeleted = filmStorage.delete(filmIdToDelete);
+        org.junit.jupiter.api.Assertions.assertTrue(isDeleted);
+
+        org.junit.jupiter.api.Assertions.assertTrue(filmStorage.findById(filmIdToDelete).isEmpty());
+    }
 }

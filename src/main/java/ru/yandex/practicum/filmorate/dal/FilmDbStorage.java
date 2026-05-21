@@ -55,6 +55,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
             FROM mpaRating
             WHERE mpaRating_id = ?
             """;
+    private static final String DELETE_FILM_LIKES_QUERY = "DELETE FROM likes WHERE film_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
@@ -107,8 +108,10 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return film;
     }
 
-    public boolean delete(long id) {
-        return delete(DELETE_QUERY, id);
+    public boolean delete(long filmId) {
+        jdbc.update(DELETE_FILM_GENRES_QUERY, filmId);
+        jdbc.update(DELETE_FILM_LIKES_QUERY, filmId);
+        return delete(DELETE_QUERY, filmId);
     }
 
     /**
