@@ -140,4 +140,12 @@ public class FilmService {
                 .toList();
     }
 
+    public void deleteFilmById(Long filmId) {
+        boolean isDeleted = filmStorage.delete(filmId);
+        if (!isDeleted) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
+        log.info("Фильм с id {} успешно удален", filmId);
+    }
+
 }
