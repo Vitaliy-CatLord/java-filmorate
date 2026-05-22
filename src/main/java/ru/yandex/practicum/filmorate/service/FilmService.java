@@ -136,6 +136,16 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getRecommendations(Long userId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
+        log.info("Получение рекомендаций для пользователя с ID {}", userId);
+        return filmStorage.getRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     public void deleteFilmById(Long filmId) {
         boolean isDeleted = filmStorage.delete(filmId);
         if (!isDeleted) {
