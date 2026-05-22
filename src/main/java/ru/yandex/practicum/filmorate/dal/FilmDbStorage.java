@@ -55,6 +55,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
             FROM mpaRating
             WHERE mpaRating_id = ?
             """;
+    private static final String DELETE_FILM_LIKES_QUERY = "DELETE FROM likes WHERE film_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
@@ -107,25 +108,17 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return film;
     }
 
-    public boolean delete(long id) {
-        return delete(DELETE_QUERY, id);
+    public boolean delete(long filmId) {
+        jdbc.update(DELETE_FILM_GENRES_QUERY, filmId);
+        jdbc.update(DELETE_FILM_LIKES_QUERY, filmId);
+        return delete(DELETE_QUERY, filmId);
     }
 
-    /**
-     * Возвращает список популярных фильмов из базы данных с возможностью фильтрации.
-     * Строит динамический SQL-запрос в зависимости от переданных фильтров по жанру и году.
-     *
-     * @param count   ограничение количества записей (LIMIT)
-     * @param genreId ID жанра для фильтрации (если null, фильтр не применяется)
-     * @param year    год релиза для фильтрации (если null, фильтр не применяется)
-     * @return список объектов Film с заполненными связями
-     */
-    public List<Film> getTopFilms(int count, Integer genreId, Integer year) {
+    public List<Film> getTopFilms(Integer count, Integer genreId, Integer year) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT f.* FROM films AS f ");
         sql.append("LEFT JOIN likes AS l ON f.id = l.film_id ");
 
-        // Если задан жанр, добавляем таблицу film_genres
         if (genreId != null) {
             sql.append("LEFT JOIN film_genres AS fg ON f.id = fg.film_id ");
         }
@@ -134,20 +127,18 @@ public class FilmDbStorage extends BaseStorage<Film> {
 
         List<Object> params = new ArrayList<>();
 
-        // Добавляем условие фильтрации по жанру
         if (genreId != null) {
             sql.append("AND fg.genre_id = ? ");
             params.add(genreId);
         }
 
-        // Добавляем условие фильтрации по году
         if (year != null) {
             sql.append("AND EXTRACT(YEAR FROM f.releaseDate) = ? ");
             params.add(year);
         }
 
         sql.append("GROUP BY f.id ");
-        sql.append("ORDER BY COUNT(DISTINCT l.user_id) DESC ");
+        sql.append("ORDER BY COUNT(DISTINCT l.user_id) DESC, f.id ASC ");
         sql.append("LIMIT ?");
         params.add(count);
 
