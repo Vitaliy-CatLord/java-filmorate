@@ -14,10 +14,8 @@ public class NewReviewRequest {
     private String content;
     @NotNull(message = "Оценка не может быть пустой")
     private Boolean isPositive;
-    @Positive(message = "Идентификатор пользователя должна быть положительным числом")
     @NotNull(message = "Идентификатор пользователя не может быть пустой")
     private Long userId;
-    @Positive(message = "Идентификатор фильма должна быть положительным числом")
     @NotNull(message = "Идентификатор фильма не может быть пустой")
     private Long filmId;
 }

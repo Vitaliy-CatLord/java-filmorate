@@ -5,8 +5,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
 import ru.yandex.practicum.filmorate.dal.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.dal.ReviewRatingDbStorage;
+import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.ReviewMapper;
@@ -22,8 +24,17 @@ import java.util.stream.Collectors;
 public class ReviewService {
     ReviewDbStorage reviewStorage;
     ReviewRatingDbStorage ratingStorage;
+    UserDbStorage userStorage;
+    FilmDbStorage filmStorage;
 
     public ReviewDto createReview(NewReviewRequest request) {
+        if(!userStorage.findById(request.getUserId()).isPresent()) {
+            throw new NotFoundException("Пользователь с ID " + request.getUserId() + " не найден");
+        }
+        if(!filmStorage.findById(request.getFilmId()).isPresent()) {
+            throw new NotFoundException("Фильм с ID " + request.getUserId() + " не найден");
+        }
+
         Review review = ReviewMapper.mapToReview(request);
 
         log.info("Создан новый отзыв с ID: {}", review.getId());
@@ -31,6 +42,13 @@ public class ReviewService {
     }
 
     public ReviewDto updateReview(UpdateReviewRequest request) {
+        if(!userStorage.findById(request.getUserId()).isPresent()) {
+            throw new NotFoundException("Пользователь с ID " + request.getUserId() + " не найден");
+        }
+        if(!filmStorage.findById(request.getFilmId()).isPresent()) {
+            throw new NotFoundException("Фильм с ID " + request.getUserId() + " не найден");
+        }
+
         long id = request.getId();
         Review review = reviewStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Отзыв с ID " + id + " не найден"));
