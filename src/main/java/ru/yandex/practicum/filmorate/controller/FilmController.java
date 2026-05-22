@@ -18,9 +18,8 @@ import java.util.List;
 @RequestMapping("/films")
 @RequiredArgsConstructor
 public class FilmController {
-    private final FilmService filmService;
-
     private static final String SETTING_LIKES = "/{id}/like/{userId}";
+    private final FilmService filmService;
 
     @PostMapping
     public FilmDto createFilm(@Valid @RequestBody NewFilmRequest newFilm) {
@@ -61,10 +60,10 @@ public class FilmController {
     // добавил возможность выбора жанра и года для вывода топ фильмов
     @GetMapping("/popular")
     public List<FilmDto> getTopFilms(
-            @RequestParam(value = "count", defaultValue = "10") Integer count,
+            @RequestParam(value = "count", required = false) Integer count, // убрал дефолтный лимит в 10 для постмана
             @RequestParam(value = "genreId", required = false) Integer genreId,
             @RequestParam(value = "year", required = false) Integer year) {
-        log.info("Выполнение запроса на получение ТОП{} популярных фильмов. Фильтры: genreId={}, year={}", count, genreId, year);
+        log.info("Выполнение запроса на получение популярных фильмов. Фильтры: genreId={}, year={}", genreId, year);
         return filmService.getTopFilms(count, genreId, year);
     }
 

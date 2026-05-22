@@ -104,19 +104,15 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
 
-    /**
-     * Возвращает список самых популярных фильмов, отфильтрованных по количеству лайков,
-     * а также опционально по жанру и/или году релиза.
-     *
-     * @param countOfTop максимальное количество возвращаемых фильмов (размер топа)
-     * @param genreId    идентификатор жанра для фильтрации (может быть null)
-     * @param year       год релиза для фильтрации (может быть null)
-     * @param-return список DTO популярных фильмов, соответствующих условиям
-     */
     public List<FilmDto> getTopFilms(Integer countOfTop, Integer genreId, Integer year) {
-
-        int limit = (countOfTop == null) ? 10 : countOfTop; // страховка от null
-
+        int limit;
+        if (countOfTop != null) {
+            limit = countOfTop;
+        } else if (genreId != null || year != null) {
+            limit = Integer.MAX_VALUE;
+        } else {
+            limit = 10;
+        }
         if (limit < 0) {
             throw new ValidationException("Число наиболее популярных фильмов не может быть отрицательным");
         }
