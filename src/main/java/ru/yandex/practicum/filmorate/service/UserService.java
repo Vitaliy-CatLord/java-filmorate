@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class UserService {
     UserDbStorage usersStorage;
+    FeedService feedService;
 
     public UserDto createUser(NewUserRequest request) {
         User user = UserMapper.mapToUser(request);
@@ -61,9 +62,8 @@ public class UserService {
         usersStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
-        //первоначально была идея сделать добавление в друзья по схеме Request->Unconfirmed->Confirmed
-        //затравка на эту схему есть в usersStorage.requestFriend(userId, friendId);
-        //но она вроде как не пройдет автотест, но было бы прикольно
+        feedService.addEvent(userId, "FRIEND", "ADD", friendId);
+        feedService.addEvent(friendId, "FRIEND", "ADD", userId);
         usersStorage.addFriend(userId, friendId);
         log.info("Пользователь  c ID {} отправил заявку на добавление в друзья ID {}.", userId, friendId);
     }
@@ -74,6 +74,8 @@ public class UserService {
         usersStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
+        feedService.addEvent(userId, "FRIEND", "REMOVE", friendId);
+        feedService.addEvent(friendId, "FRIEND", "REMOVE", userId);
         usersStorage.removeFriend(userId, friendId);
         log.info("Пользователь ID {} больше не дружит с ID {}.", userId, friendId);
     }

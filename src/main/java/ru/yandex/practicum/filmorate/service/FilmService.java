@@ -29,6 +29,7 @@ public class FilmService {
     FilmDbStorage filmStorage;
     RatingDbStorage ratingStorage;
     GenreDbStorage genreStorage;
+    FeedService feedService;
 
     Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
 
@@ -90,6 +91,7 @@ public class FilmService {
         User user = usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
+        feedService.addEvent(userId, "LIKE", "ADD", filmId);
         filmStorage.addLike(userId, filmId);
         log.info("Пользователь {} поставил лайк фильму {}.", user.getName(), film.getName());
     }
@@ -100,6 +102,7 @@ public class FilmService {
         User user = usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
+        feedService.addEvent(userId, "LIKE", "REMOVE", filmId);
         filmStorage.removeLike(userId, filmId);
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
