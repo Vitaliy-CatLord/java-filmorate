@@ -56,6 +56,24 @@ public class FilmDbStorage extends BaseStorage<Film> {
             WHERE mpaRating_id = ?
             """;
 
+    private static final String GET_RECOMMENDATIONS_QUERY = """
+        WITH shared_likes AS (
+            SELECT user_id, COUNT(film_id) as count_likes
+            FROM likes
+            WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = ?) AND user_id <> ?
+            GROUP BY user_id
+        )
+        SELECT DISTINCT f.*
+        FROM films f
+        JOIN likes l ON f.id = l.film_id
+        WHERE l.user_id IN (
+            SELECT user_id
+            FROM shared_likes
+            WHERE count_likes = (SELECT MAX(count_likes) FROM shared_likes)
+        )
+        AND f.id NOT IN (SELECT film_id FROM likes WHERE user_id = ?)
+        """;
+
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
     }
@@ -231,5 +249,11 @@ public class FilmDbStorage extends BaseStorage<Film> {
         } catch (Exception e) {
             System.out.println("Ошибка загрузки рейтинга: " + e.getMessage());
         }
+    }
+
+    public List<Film> getRecommendations(long userId) {
+        List<Film> films = findMany(GET_RECOMMENDATIONS_QUERY, userId, userId, userId);
+        films.forEach(this::loadLGR);
+        return films;
     }
 }

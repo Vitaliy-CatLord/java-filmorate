@@ -88,4 +88,5 @@ class FilmDbStorageTest {
         assertEquals(2, result.size());
         assertEquals(2L, result.get(0).getId());
     }
+
 }
