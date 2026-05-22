@@ -28,10 +28,10 @@ public class ReviewService {
     FilmDbStorage filmStorage;
 
     public ReviewDto createReview(NewReviewRequest request) {
-        if(userStorage.findById(request.getUserId()).isEmpty()) {
+        if (userStorage.findById(request.getUserId()).isEmpty()) {
             throw new NotFoundException("Пользователь с ID " + request.getUserId() + " не найден");
         }
-        if(filmStorage.findById(request.getFilmId()).isEmpty()) {
+        if (filmStorage.findById(request.getFilmId()).isEmpty()) {
             throw new NotFoundException("Фильм с ID " + request.getUserId() + " не найден");
         }
 
@@ -42,10 +42,10 @@ public class ReviewService {
     }
 
     public ReviewDto updateReview(UpdateReviewRequest request) {
-        if(userStorage.findById(request.getUserId()).isEmpty()) {
+        if (userStorage.findById(request.getUserId()).isEmpty()) {
             throw new NotFoundException("Пользователь с ID " + request.getUserId() + " не найден");
         }
-        if(filmStorage.findById(request.getFilmId()).isEmpty()) {
+        if (filmStorage.findById(request.getFilmId()).isEmpty()) {
             throw new NotFoundException("Фильм с ID " + request.getUserId() + " не найден");
         }
 

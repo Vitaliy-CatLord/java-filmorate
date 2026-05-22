@@ -10,7 +10,7 @@ import java.sql.SQLException;
 @Component
 public class ReviewRatingRowMapper implements RowMapper<ReviewRating> {
     @Override
-    public ReviewRating mapRow (ResultSet rs, int rowNum) throws SQLException {
+    public ReviewRating mapRow(ResultSet rs, int rowNum) throws SQLException {
         ReviewRating reviewRating = new ReviewRating();
         reviewRating.setReviewId(rs.getLong("review_id"));
         reviewRating.setUserId(rs.getLong("user_id"));

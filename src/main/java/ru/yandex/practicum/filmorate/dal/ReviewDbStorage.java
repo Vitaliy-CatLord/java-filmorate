@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Slf4j
 @Repository
-public class ReviewDbStorage extends BaseStorage{
+public class ReviewDbStorage extends BaseStorage {
 
     private static final String INSERT_QUERY =
             "INSERT INTO reviews(content, is_positive, user_id, film_id, useful_rating) "
@@ -91,7 +91,6 @@ public class ReviewDbStorage extends BaseStorage{
         String sql = "UPDATE reviews SET useful_rating = useful_rating + ? WHERE id = ?";
         update(sql, delta, reviewId);
     }
-
 
 
 }

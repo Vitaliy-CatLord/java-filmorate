@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public class ReviewRatingDbStorage extends BaseStorage {
     private final ReviewDbStorage reviewDbStorage;
+
     public ReviewRatingDbStorage(JdbcTemplate jdbc, ReviewRatingRowMapper mapper, ReviewDbStorage reviewDbStorage) {
         super(jdbc, mapper);
         this.reviewDbStorage = reviewDbStorage;
