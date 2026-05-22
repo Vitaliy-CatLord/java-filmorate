@@ -100,4 +100,5 @@ class FilmDbStorageTest {
 
         org.junit.jupiter.api.Assertions.assertTrue(filmStorage.findById(filmIdToDelete).isEmpty());
     }
+
 }
