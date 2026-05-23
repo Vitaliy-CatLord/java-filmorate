@@ -4,9 +4,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
@@ -18,6 +20,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final FilmService filmService;
 
     private static final String SETTING_FRIENDS_PATH = "/{id}/friends/{friendId}";
     private static final String FRIENDS_LIST_PATH = "/{id}/friends";
@@ -70,5 +73,17 @@ public class UserController {
         log.info("Выполнение запроса на получение списка общих друзей пользователя с ID {}" +
                 " и пользователя {}", id, otherId);
         return userService.getCommonFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public List<FilmDto> getRecommendations(@PathVariable Long id) {
+        log.info("Выполнение запроса на получение рекомендаций для пользователя с ID {}", id);
+        return filmService.getRecommendations(id);
+    }
+
+    @DeleteMapping("/{userId}")
+    public void deleteUserById(@PathVariable Long userId) {
+        log.info("Выполнение запроса на удаление пользователя с ID {}", userId);
+        userService.deleteUserById(userId);
     }
 }

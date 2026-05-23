@@ -98,4 +98,12 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public void deleteUserById(Long userId) {
+        boolean isDeleted = usersStorage.delete(userId);
+        if (!isDeleted) {
+            throw new NotFoundException("Пользователь с id " + userId + " не найден");
+        }
+        log.info("Пользователь с id {} успешно удален", userId);
+    }
+
 }

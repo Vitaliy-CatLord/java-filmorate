@@ -121,12 +121,33 @@ public class FilmService {
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
 
-    public List<FilmDto> getTopFilms(int countOfTop) {
-        if (countOfTop < 0) {
+    public List<FilmDto> getTopFilms(Integer countOfTop, Integer genreId, Integer year) {
+        int limit;
+        if (countOfTop != null) {
+            limit = countOfTop;
+        } else if (genreId != null || year != null) {
+            limit = Integer.MAX_VALUE;
+        } else {
+            limit = 10;
+        }
+        if (limit < 0) {
             throw new ValidationException("Число наиболее популярных фильмов не может быть отрицательным");
         }
-        log.info("Получение топ {} по количеству лайков", countOfTop);
-        return filmStorage.getTopFilms(countOfTop)
+        log.info("Получение топ {} по количеству лайков. Фильтры: genreId={}, year={}", countOfTop, genreId, year);
+        return filmStorage.getTopFilms(limit, genreId, year)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        usersStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
+
+        log.info("Получение общих фильмов юзеров {} и {}", userId, friendId);
+        return filmStorage.getCommonFilms(userId, friendId)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
@@ -144,10 +165,28 @@ public class FilmService {
         } else {
             throw new ValidationException("Недопустимое значение sortBy: " + sortBy + ". Допустимые значения: year, likes");
         }
-
+  
         log.info("Получение фильмов режиссёра {} с сортировкой по {}", directorId, sortBy);
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+  
+    public List<FilmDto> getRecommendations(Long userId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
+        log.info("Получение рекомендаций для пользователя с ID {}", userId);
+        return filmStorage.getRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public void deleteFilmById(Long filmId) {
+        boolean isDeleted = filmStorage.delete(filmId);
+        if (!isDeleted) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
+        log.info("Фильм с id {} успешно удален", filmId);
     }
 }

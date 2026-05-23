@@ -25,13 +25,15 @@ public class FilmDbStorage extends BaseStorage<Film> {
             "SET name = ?, description = ?, releaseDate = ?, duration = ?, mpaRating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
-    private static final String GET_TOP_FILMS_QUERY = """
-            SELECT films.*
-            FROM films
-            LEFT JOIN likes ON films.id = likes.film_id
-            GROUP BY films.id
-            ORDER BY COUNT(likes.user_id) DESC
-            LIMIT ?
+    //если будет падать, добавить группировку по режиссеру
+    private static final String GET_COMMON_FILMS_QUERY = """
+            SELECT f.*
+            FROM films AS f
+            JOIN likes AS l1 ON f.id = l1.film_id AND l1.user_id = ?
+            JOIN likes AS l2 ON f.id = l2.film_id AND l2.user_id = ?
+            LEFT JOIN likes AS l_all ON f.id = l_all.film_id
+            GROUP BY f.id, f.name, f.description, f.releaseDate, f.duration, f.mpaRating_id
+            ORDER BY COUNT(l_all.user_id) DESC;
             """;
 
     private static final String GET_DIRECTOR_FILMS_BY_LIKES_QUERY = """
@@ -70,6 +72,25 @@ public class FilmDbStorage extends BaseStorage<Film> {
             FROM mpaRating
             WHERE mpaRating_id = ?
             """;
+    private static final String DELETE_FILM_LIKES_QUERY = "DELETE FROM likes WHERE film_id = ?";
+
+    private static final String GET_RECOMMENDATIONS_QUERY = """
+        WITH shared_likes AS (
+            SELECT user_id, COUNT(film_id) as count_likes
+            FROM likes
+            WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = ?) AND user_id <> ?
+            GROUP BY user_id
+        )
+        SELECT DISTINCT f.*
+        FROM films f
+        JOIN likes l ON f.id = l.film_id
+        WHERE l.user_id IN (
+            SELECT user_id
+            FROM shared_likes
+            WHERE count_likes = (SELECT MAX(count_likes) FROM shared_likes)
+        )
+        AND f.id NOT IN (SELECT film_id FROM likes WHERE user_id = ?)
+        """;
 
     private static final String ADD_DIRECTOR_QUERY =
             "INSERT INTO film_directors(film_id, director_id) VALUES (?, ?)";
@@ -136,12 +157,47 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return film;
     }
 
-    public boolean delete(long id) {
-        return delete(DELETE_QUERY, id);
+    public boolean delete(long filmId) {
+        jdbc.update(DELETE_FILM_GENRES_QUERY, filmId);
+        jdbc.update(DELETE_FILM_LIKES_QUERY, filmId);
+        return delete(DELETE_QUERY, filmId);
     }
 
-    public List<Film> getTopFilms(int count) {
-        List<Film> films = findMany(GET_TOP_FILMS_QUERY, count);
+    public List<Film> getTopFilms(Integer count, Integer genreId, Integer year) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT f.* FROM films AS f ");
+        sql.append("LEFT JOIN likes AS l ON f.id = l.film_id ");
+
+        if (genreId != null) {
+            sql.append("LEFT JOIN film_genres AS fg ON f.id = fg.film_id ");
+        }
+
+        sql.append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+
+        if (genreId != null) {
+            sql.append("AND fg.genre_id = ? ");
+            params.add(genreId);
+        }
+
+        if (year != null) {
+            sql.append("AND EXTRACT(YEAR FROM f.releaseDate) = ? ");
+            params.add(year);
+        }
+
+        sql.append("GROUP BY f.id ");
+        sql.append("ORDER BY COUNT(DISTINCT l.user_id) DESC, f.id ASC ");
+        sql.append("LIMIT ?");
+        params.add(count);
+
+        List<Film> films = findMany(sql.toString(), params.toArray());
+        films.forEach(this::loadLGR);
+        return films;
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        List<Film> films = findMany(GET_COMMON_FILMS_QUERY, userId, friendId);
         films.forEach(this::loadLGR);
         return films;
     }
@@ -261,5 +317,11 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 },
                 film.getId());
         film.setDirectors(new ArrayList<>(directors));
+    }
+
+    public List<Film> getRecommendations(long userId) {
+        List<Film> films = findMany(GET_RECOMMENDATIONS_QUERY, userId, userId, userId);
+        films.forEach(this::loadLGR);
+        return films;
     }
 }
