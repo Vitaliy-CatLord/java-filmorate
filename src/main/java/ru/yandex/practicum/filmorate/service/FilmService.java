@@ -167,13 +167,13 @@ public class FilmService {
         } else {
             throw new ValidationException("Недопустимое значение sortBy: " + sortBy + ". Допустимые значения: year, likes");
         }
-  
+
         log.info("Получение фильмов режиссёра {} с сортировкой по {}", directorId, sortBy);
         return films.stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
-  
+
     public List<FilmDto> getRecommendations(Long userId) {
         usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
