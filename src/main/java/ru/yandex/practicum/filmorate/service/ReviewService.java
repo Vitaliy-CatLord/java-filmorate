@@ -26,6 +26,7 @@ public class ReviewService {
     ReviewRatingDbStorage ratingStorage;
     UserDbStorage userStorage;
     FilmDbStorage filmStorage;
+    FeedService feedService;
 
     public ReviewDto createReview(NewReviewRequest request) {
         if (userStorage.findById(request.getUserId()).isEmpty()) {
@@ -36,9 +37,11 @@ public class ReviewService {
         }
 
         Review review = ReviewMapper.mapToReview(request);
+        ReviewDto reviewDto = ReviewMapper.mapToReviewDto(reviewStorage.save(review));
 
-        log.info("Создан новый отзыв с ID: {}", review.getId());
-        return ReviewMapper.mapToReviewDto(reviewStorage.save(review));
+        feedService.addEvent(reviewDto.getUserId(), "REVIEW", "ADD", reviewDto.getReviewId());
+        log.info("Создан новый отзыв с ID: {}", reviewDto.getReviewId());
+        return reviewDto;
     }
 
     public ReviewDto updateReview(UpdateReviewRequest request) {
@@ -54,12 +57,17 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Отзыв с ID " + id + " не найден"));
 
         ReviewMapper.updateReviewFields(review, request);
+        feedService.addEvent(review.getUserId(), "REVIEW", "UPDATE", review.getId());
         log.info("Отзыв с ID {} обновлён", id);
         return ReviewMapper.mapToReviewDto(reviewStorage.update(review));
     }
 
     public void deleteReview(Long reviewId) {
+        Review review = reviewStorage.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Отзыв с ID " + reviewId + " не найден"));
+
         reviewStorage.delete(reviewId);
+        feedService.addEvent(review.getUserId(), "REVIEW", "REMOVE", review.getId());
         log.info("Отзыв с ID {} удалён", reviewId);
     }
 
