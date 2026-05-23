@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,9 @@ public class FilmMapper {
         if (request.getGenres() != null) {
             film.setGenres(request.getGenres());
         }
+        if (request.getDirectors() != null) {
+            film.setDirectors(request.getDirectors());
+        }
         return film;
     }
 
@@ -45,6 +49,9 @@ public class FilmMapper {
                 .stream()
                 .sorted((Comparator.comparing(Genre::getGenreId)))
                 .collect(Collectors.toList()));
+        dto.setDirectors(film.getDirectors() != null
+                ? new ArrayList<>(film.getDirectors())
+                : new ArrayList<>());
 
         return dto;
     }
@@ -68,6 +75,9 @@ public class FilmMapper {
         }
         if (request.hasGenres()) {
             film.setGenres(request.getGenres());
+        }
+        if (request.hasDirectors()) {
+            film.setDirectors(request.getDirectors());
         }
 
         return film;

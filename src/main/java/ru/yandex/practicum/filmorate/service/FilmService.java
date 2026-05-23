@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
@@ -29,6 +30,7 @@ public class FilmService {
     FilmDbStorage filmStorage;
     RatingDbStorage ratingStorage;
     GenreDbStorage genreStorage;
+    DirectorDbStorage directorStorage;
     FriendshipStatusDbStorage friendshipStatusStorage;
 
     Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
@@ -45,6 +47,13 @@ public class FilmService {
             for (Genre genre : request.getGenres()) {
                 genreStorage.findById(genre.getGenreId())
                         .orElseThrow(() -> new NotFoundException("Жанр не найден"));
+            }
+        }
+
+        if (request.getDirectors() != null) {
+            for (Director director : request.getDirectors()) {
+                directorStorage.findById(director.getDirectorId())
+                        .orElseThrow(() -> new NotFoundException("Режиссёр не найден"));
             }
         }
 
@@ -65,6 +74,13 @@ public class FilmService {
 
         if (request.getMpaRating() != null) {
             ratingStorage.findById(request.getMpaRating().getMpaRatingId());
+        }
+
+        if (request.getDirectors() != null) {
+            for (Director director : request.getDirectors()) {
+                directorStorage.findById(director.getDirectorId())
+                        .orElseThrow(() -> new NotFoundException("Режиссёр не найден"));
+            }
         }
 
         FilmMapper.updateFilmFields(film, request);
@@ -116,5 +132,22 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
+        directorStorage.findById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id " + directorId + " не найден"));
 
+        List<Film> films;
+        if ("year".equals(sortBy)) {
+            films = filmStorage.getFilmsByDirectorSortedByYear(directorId);
+        } else if ("likes".equals(sortBy)) {
+            films = filmStorage.getFilmsByDirectorSortedByLikes(directorId);
+        } else {
+            throw new ValidationException("Недопустимое значение sortBy: " + sortBy + ". Допустимые значения: year, likes");
+        }
+
+        log.info("Получение фильмов режиссёра {} с сортировкой по {}", directorId, sortBy);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
 }

@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.annotations.AfterMinDate;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
@@ -30,4 +31,5 @@ public class NewFilmRequest {
     @JsonProperty("mpa")
     MpaRating mpaRating;
     List<Genre> genres;
+    List<Director> directors;
 }

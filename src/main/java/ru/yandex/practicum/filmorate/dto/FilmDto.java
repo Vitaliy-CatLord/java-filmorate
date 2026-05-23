@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
@@ -22,4 +23,5 @@ public class FilmDto {
     Integer duration;
     MpaRating mpa;
     List<Genre> genres = new ArrayList<>();
+    List<Director> directors = new ArrayList<>();
 }

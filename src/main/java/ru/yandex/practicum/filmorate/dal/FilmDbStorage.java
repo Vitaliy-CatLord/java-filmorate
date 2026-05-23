@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -14,8 +15,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @Repository
 public class FilmDbStorage extends BaseStorage<Film> {
-
-
     private static final String INSERT_QUERY =
             "INSERT INTO films(name, description, releaseDate, duration, mpaRating_id) "
                     + "VALUES (?, ?, ?, ?, ?)";
@@ -33,6 +32,24 @@ public class FilmDbStorage extends BaseStorage<Film> {
             GROUP BY films.id
             ORDER BY COUNT(likes.user_id) DESC
             LIMIT ?
+            """;
+
+    private static final String GET_DIRECTOR_FILMS_BY_LIKES_QUERY = """
+            SELECT films.*
+            FROM films
+            JOIN film_directors fd ON films.id = fd.film_id
+            LEFT JOIN likes ON films.id = likes.film_id
+            WHERE fd.director_id = ?
+            GROUP BY films.id
+            ORDER BY COUNT(likes.user_id) DESC
+            """;
+
+    private static final String GET_DIRECTOR_FILMS_BY_YEAR_QUERY = """
+            SELECT films.*
+            FROM films
+            JOIN film_directors fd ON films.id = fd.film_id
+            WHERE fd.director_id = ?
+            ORDER BY films.releaseDate ASC
             """;
 
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes (user_id, film_id) VALUES (?, ?)";
@@ -54,6 +71,18 @@ public class FilmDbStorage extends BaseStorage<Film> {
             WHERE mpaRating_id = ?
             """;
 
+    private static final String ADD_DIRECTOR_QUERY =
+            "INSERT INTO film_directors(film_id, director_id) VALUES (?, ?)";
+    private static final String GET_FILM_DIRECTORS_QUERY = """
+            SELECT d.director_id, d.name
+            FROM directors AS d
+            JOIN film_directors AS fd ON d.director_id = fd.director_id
+            WHERE fd.film_id = ?
+            """;
+    private static final String DELETE_FILM_DIRECTORS_QUERY =
+            "DELETE FROM film_directors WHERE film_id = ?";
+
+
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
     }
@@ -68,6 +97,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 film.getMpaRatingId());
         film.setId(id);
         updateGenres(film);
+        updateDirectors(film);
         loadLGR(film);
         return film;
     }
@@ -101,6 +131,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 film.getId()
         );
         updateGenres(film);
+        updateDirectors(film);
         loadLGR(film);
         return film;
     }
@@ -111,6 +142,18 @@ public class FilmDbStorage extends BaseStorage<Film> {
 
     public List<Film> getTopFilms(int count) {
         List<Film> films = findMany(GET_TOP_FILMS_QUERY, count);
+        films.forEach(this::loadLGR);
+        return films;
+    }
+
+    public List<Film> getFilmsByDirectorSortedByLikes(long directorId) {
+        List<Film> films = findMany(GET_DIRECTOR_FILMS_BY_LIKES_QUERY, directorId);
+        films.forEach(this::loadLGR);
+        return films;
+    }
+
+    public List<Film> getFilmsByDirectorSortedByYear(long directorId) {
+        List<Film> films = findMany(GET_DIRECTOR_FILMS_BY_YEAR_QUERY, directorId);
         films.forEach(this::loadLGR);
         return films;
     }
@@ -154,6 +197,30 @@ public class FilmDbStorage extends BaseStorage<Film> {
         }
     }
 
+    public void updateDirectors(Film film) {
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, film.getId());
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<Director> uniqueDirectors = film.getDirectors().stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(
+                            Director::getDirectorId,
+                            d -> d,
+                            (existing, replacement) -> existing
+                    ))
+                    .values()
+                    .stream()
+                    .toList();
+            for (Director d : uniqueDirectors) {
+                if (d.getDirectorId() > 0) {
+                    jdbc.update(ADD_DIRECTOR_QUERY, film.getId(), d.getDirectorId());
+                } else {
+                    log.warn("Режиссёр задан неверно: {}", d);
+                }
+            }
+        }
+    }
+
     public void loadLGR(Film film) {
         //Likes
         List<Long> likes = jdbc.queryForList(GET_FILM_LIKES_QUERY, Long.class, film.getId());
@@ -184,5 +251,15 @@ public class FilmDbStorage extends BaseStorage<Film> {
         } catch (Exception e) {
             System.out.println("Ошибка загрузки рейтинга: " + e.getMessage());
         }
+
+        List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY,
+                (rs, i) -> {
+                    Director director = new Director();
+                    director.setDirectorId(rs.getLong("director_id"));
+                    director.setName(rs.getString("name"));
+                    return director;
+                },
+                film.getId());
+        film.setDirectors(new ArrayList<>(directors));
     }
 }

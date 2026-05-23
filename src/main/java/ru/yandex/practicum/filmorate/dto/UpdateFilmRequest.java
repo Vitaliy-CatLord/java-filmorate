@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import ru.yandex.practicum.filmorate.annotations.AfterMinDate;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
 
@@ -23,7 +24,6 @@ public class UpdateFilmRequest {
     @Size(max = 200, message = "Описание не может быть длиннее 200 символов")
     String description;
     @NotNull
-    @PastOrPresent(message = "Дата релиза не может быть в будущем")
     @AfterMinDate
     LocalDate releaseDate;
     @Positive(message = "Продолжительность должна быть положительным числом")
@@ -31,6 +31,7 @@ public class UpdateFilmRequest {
     Integer duration;
     MpaRating mpaRating;
     List<Genre> genres = new ArrayList<>();
+    List<Director> directors = new ArrayList<>();
 
     public boolean hasName() {
         return !(name == null || name.isBlank());
@@ -54,5 +55,9 @@ public class UpdateFilmRequest {
 
     public boolean hasGenres() {
         return genres != null;
+    }
+
+    public boolean hasDirectors() {
+        return directors != null;
     }
 }
