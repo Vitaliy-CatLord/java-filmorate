@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MpaRating;
@@ -26,7 +27,6 @@ public class FilmDbStorage extends BaseStorage<Film> {
             "SET name = ?, description = ?, releaseDate = ?, duration = ?, mpaRating_id = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM films WHERE id = ?";
 
-    //если будет падать, добавить группировку по режиссеру
     private static final String GET_COMMON_FILMS_QUERY = """
             SELECT f.*
             FROM films AS f
@@ -35,6 +35,24 @@ public class FilmDbStorage extends BaseStorage<Film> {
             LEFT JOIN likes AS l_all ON f.id = l_all.film_id
             GROUP BY f.id, f.name, f.description, f.releaseDate, f.duration, f.mpaRating_id
             ORDER BY COUNT(l_all.user_id) DESC;
+            """;
+
+    private static final String GET_DIRECTOR_FILMS_BY_LIKES_QUERY = """
+            SELECT films.*
+            FROM films
+            JOIN film_directors fd ON films.id = fd.film_id
+            LEFT JOIN likes ON films.id = likes.film_id
+            WHERE fd.director_id = ?
+            GROUP BY films.id
+            ORDER BY COUNT(likes.user_id) DESC
+            """;
+
+    private static final String GET_DIRECTOR_FILMS_BY_YEAR_QUERY = """
+            SELECT films.*
+            FROM films
+            JOIN film_directors fd ON films.id = fd.film_id
+            WHERE fd.director_id = ?
+            ORDER BY films.releaseDate ASC
             """;
 
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes (user_id, film_id) VALUES (?, ?)";
@@ -58,22 +76,33 @@ public class FilmDbStorage extends BaseStorage<Film> {
     private static final String DELETE_FILM_LIKES_QUERY = "DELETE FROM likes WHERE film_id = ?";
 
     private static final String GET_RECOMMENDATIONS_QUERY = """
-        WITH shared_likes AS (
-            SELECT user_id, COUNT(film_id) as count_likes
-            FROM likes
-            WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = ?) AND user_id <> ?
-            GROUP BY user_id
-        )
-        SELECT DISTINCT f.*
-        FROM films f
-        JOIN likes l ON f.id = l.film_id
-        WHERE l.user_id IN (
-            SELECT user_id
-            FROM shared_likes
-            WHERE count_likes = (SELECT MAX(count_likes) FROM shared_likes)
-        )
-        AND f.id NOT IN (SELECT film_id FROM likes WHERE user_id = ?)
-        """;
+            WITH shared_likes AS (
+                SELECT user_id, COUNT(film_id) as count_likes
+                FROM likes
+                WHERE film_id IN (SELECT film_id FROM likes WHERE user_id = ?) AND user_id <> ?
+                GROUP BY user_id
+            )
+            SELECT DISTINCT f.*
+            FROM films f
+            JOIN likes l ON f.id = l.film_id
+            WHERE l.user_id IN (
+                SELECT user_id
+                FROM shared_likes
+                WHERE count_likes = (SELECT MAX(count_likes) FROM shared_likes)
+            )
+            AND f.id NOT IN (SELECT film_id FROM likes WHERE user_id = ?)
+            """;
+
+    private static final String ADD_DIRECTOR_QUERY =
+            "INSERT INTO film_directors(film_id, director_id) VALUES (?, ?)";
+    private static final String GET_FILM_DIRECTORS_QUERY = """
+            SELECT d.id AS director_id, d.name
+            FROM directors d
+            JOIN film_directors fd ON d.id = fd.director_id
+            WHERE fd.film_id = ?
+            """;
+    private static final String DELETE_FILM_DIRECTORS_QUERY =
+            "DELETE FROM film_directors WHERE film_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
@@ -89,6 +118,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 film.getMpaRatingId());
         film.setId(id);
         updateGenres(film);
+        updateDirectors(film);
         loadLGR(film);
         return film;
     }
@@ -122,11 +152,13 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 film.getId()
         );
         updateGenres(film);
+        updateDirectors(film);
         loadLGR(film);
         return film;
     }
 
     public boolean delete(long filmId) {
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, filmId);
         jdbc.update(DELETE_FILM_GENRES_QUERY, filmId);
         jdbc.update(DELETE_FILM_LIKES_QUERY, filmId);
         return delete(DELETE_QUERY, filmId);
@@ -171,6 +203,18 @@ public class FilmDbStorage extends BaseStorage<Film> {
         return films;
     }
 
+    public List<Film> getFilmsByDirectorSortedByLikes(long directorId) {
+        List<Film> films = findMany(GET_DIRECTOR_FILMS_BY_LIKES_QUERY, directorId);
+        films.forEach(this::loadLGR);
+        return films;
+    }
+
+    public List<Film> getFilmsByDirectorSortedByYear(long directorId) {
+        List<Film> films = findMany(GET_DIRECTOR_FILMS_BY_YEAR_QUERY, directorId);
+        films.forEach(this::loadLGR);
+        return films;
+    }
+
     public void addLike(long userId, long filmId) {
         jdbc.update(ADD_LIKE_QUERY, userId, filmId);
     }
@@ -210,6 +254,30 @@ public class FilmDbStorage extends BaseStorage<Film> {
         }
     }
 
+    public void updateDirectors(Film film) {
+        jdbc.update(DELETE_FILM_DIRECTORS_QUERY, film.getId());
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<Director> uniqueDirectors = film.getDirectors().stream()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toMap(
+                            Director::getId,
+                            d -> d,
+                            (existing, replacement) -> existing
+                    ))
+                    .values()
+                    .stream()
+                    .toList();
+            for (Director d : uniqueDirectors) {
+                if (d.getId() > 0) {
+                    jdbc.update(ADD_DIRECTOR_QUERY, film.getId(), d.getId());
+                } else {
+                    log.warn("Режиссёр задан неверно: {}", d);
+                }
+            }
+        }
+    }
+
     public void loadLGR(Film film) {
         //Likes
         List<Long> likes = jdbc.queryForList(GET_FILM_LIKES_QUERY, Long.class, film.getId());
@@ -240,6 +308,16 @@ public class FilmDbStorage extends BaseStorage<Film> {
         } catch (Exception e) {
             System.out.println("Ошибка загрузки рейтинга: " + e.getMessage());
         }
+
+        List<Director> directors = jdbc.query(GET_FILM_DIRECTORS_QUERY,
+                (rs, i) -> {
+                    Director director = new Director();
+                    director.setId(rs.getLong("director_id"));
+                    director.setName(rs.getString("name"));
+                    return director;
+                },
+                film.getId());
+        film.setDirectors(new ArrayList<>(directors));
     }
 
     public List<Film> getRecommendations(long userId) {
