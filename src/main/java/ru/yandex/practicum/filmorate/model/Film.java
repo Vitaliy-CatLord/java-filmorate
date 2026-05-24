@@ -20,4 +20,5 @@ public class Film {
     List<Genre> genres = new ArrayList<>();
     MpaRating mpaRating;
     Integer mpaRatingId;
+    List<Director> directors = new ArrayList<>();
 }
