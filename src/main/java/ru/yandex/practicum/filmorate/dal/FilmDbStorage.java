@@ -33,7 +33,7 @@ public class FilmDbStorage extends BaseStorage<Film> {
             JOIN likes AS l1 ON f.id = l1.film_id AND l1.user_id = ?
             JOIN likes AS l2 ON f.id = l2.film_id AND l2.user_id = ?
             LEFT JOIN likes AS l_all ON f.id = l_all.film_id
-            GROUP BY f.id, f.name, f.description, f.releaseDate, f.duration, f.mpaRating_id, f.director_id
+            GROUP BY f.id, f.name, f.description, f.releaseDate, f.duration, f.mpaRating_id
             ORDER BY COUNT(l_all.user_id) DESC;
             """;
 
