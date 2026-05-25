@@ -55,7 +55,9 @@ public class FilmDbStorage extends BaseStorage<Film> {
             ORDER BY films.releaseDate ASC
             """;
 
-    private static final String ADD_LIKE_QUERY = "INSERT INTO likes (user_id, film_id) VALUES (?, ?)";
+    private static final String ADD_LIKE_QUERY = "MERGE INTO likes (user_id, film_id)" +
+            "KEY (user_id, film_id)" +
+            "VALUES (?, ?)";
     private static final String GET_FILM_LIKES_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
     private static final String REMOVE_LIKE_QUERY = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
 
