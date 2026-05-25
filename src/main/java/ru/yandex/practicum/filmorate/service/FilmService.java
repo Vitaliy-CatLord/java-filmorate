@@ -192,4 +192,25 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> searchFilms(String query, List<String> by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Параметр query не может быть пустым");
+        }
+        if (by == null || by.isEmpty()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+
+        boolean byTitle = by.contains("title");
+        boolean byDirector = by.contains("director");
+
+        if (!byTitle && !byDirector) {
+            throw new ValidationException("Параметр by должен содержать 'title' и/или 'director'");
+        }
+
+        log.info("Поиск фильмов по запросу '{}', критерии: {}", query, by);
+        return filmStorage.searchFilms(query, byTitle, byDirector).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
 }
