@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,8 +64,8 @@ public class UserService {
         usersStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
-        feedService.addEvent(userId, "FRIEND", "ADD", friendId);
-        feedService.addEvent(friendId, "FRIEND", "ADD", userId);
+        feedService.addEvent(userId, EventType.FRIEND.name(), EventOperation.ADD.name(), friendId);
+        feedService.addEvent(friendId, EventType.FRIEND.name(), EventOperation.ADD.name(), userId);
         usersStorage.addFriend(userId, friendId);
         log.info("Пользователь  c ID {} отправил заявку на добавление в друзья ID {}.", userId, friendId);
     }
@@ -74,8 +76,8 @@ public class UserService {
         usersStorage.findById(friendId)
                 .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
-        feedService.addEvent(userId, "FRIEND", "REMOVE", friendId);
-        feedService.addEvent(friendId, "FRIEND", "REMOVE", userId);
+        feedService.addEvent(userId, EventType.FRIEND.name(), EventOperation.REMOVE.name(), friendId);
+        feedService.addEvent(friendId, EventType.FRIEND.name(), EventOperation.REMOVE.name(), userId);
         usersStorage.removeFriend(userId, friendId);
         log.info("Пользователь ID {} больше не дружит с ID {}.", userId, friendId);
     }

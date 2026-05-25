@@ -15,25 +15,23 @@ import java.util.List;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class FeedService {
-    //так как лишь добавление события и выдача событий по пользователю,
-    // не вижу смысла отдельно создавать слой репозитория
-    // и сквозняком тащить все в него сквозь сервис
+    //добавление слоя репозитория на данном этапе избыточно
     JdbcTemplate jdbc;
 
+    private static final String INSERT_QUERY = "INSERT INTO user_feeds (user_id, event_type, operation, entity_id, timestamp)" +
+            "VALUES (?, ?, ?, ?, ?)";
+    private static final String FIND_USER_FEEDS_QUERY = "SELECT id AS eventId, timestamp, user_id AS userId, " +
+            "event_type AS eventType, operation, entity_id AS entityId " +
+            "FROM user_feeds " +
+            "WHERE user_id = ? ";
+
     public void addEvent(Long userId, String eventType, String operation, Long entityId) {
-        String sql = "INSERT INTO user_feeds (user_id, event_type, operation, entity_id, timestamp)" +
-                "VALUES (?, ?, ?, ?, ?)";
         long currentTimeMillis = System.currentTimeMillis();
-        jdbc.update(sql, userId, eventType, operation, entityId, currentTimeMillis);
+        jdbc.update(INSERT_QUERY, userId, eventType, operation, entityId, currentTimeMillis);
     }
 
     public List<EventDto> getUserFeeds(Long userId) {
-        String sql = "SELECT id AS eventId, timestamp, user_id AS userId, " +
-                "event_type AS eventType, operation, entity_id AS entityId " +
-                "FROM user_feeds " +
-                "WHERE user_id = ? ";
-
-        return jdbc.query(sql, (rs, rowNum) -> {
+        return jdbc.query(FIND_USER_FEEDS_QUERY, (rs, rowNum) -> {
             EventDto event = new EventDto();
             event.setEventId(rs.getLong("eventId"));
             event.setTimestamp(rs.getLong("timestamp"));

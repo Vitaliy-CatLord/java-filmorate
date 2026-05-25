@@ -13,6 +13,8 @@ import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mappers.ReviewMapper;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -39,7 +41,7 @@ public class ReviewService {
         Review review = ReviewMapper.mapToReview(request);
         ReviewDto reviewDto = ReviewMapper.mapToReviewDto(reviewStorage.save(review));
 
-        feedService.addEvent(reviewDto.getUserId(), "REVIEW", "ADD", reviewDto.getReviewId());
+        feedService.addEvent(reviewDto.getUserId(), EventType.REVIEW.name(), EventOperation.ADD.name(), reviewDto.getReviewId());
         log.info("Создан новый отзыв с ID: {}", reviewDto.getReviewId());
         return reviewDto;
     }
@@ -57,7 +59,7 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Отзыв с ID " + id + " не найден"));
 
         ReviewMapper.updateReviewFields(review, request);
-        feedService.addEvent(review.getUserId(), "REVIEW", "UPDATE", review.getId());
+        feedService.addEvent(review.getUserId(), EventType.REVIEW.name(), EventOperation.UPDATE.name(), review.getId());
         log.info("Отзыв с ID {} обновлён", id);
         return ReviewMapper.mapToReviewDto(reviewStorage.update(review));
     }
@@ -67,7 +69,7 @@ public class ReviewService {
                 .orElseThrow(() -> new NotFoundException("Отзыв с ID " + reviewId + " не найден"));
 
         reviewStorage.delete(reviewId);
-        feedService.addEvent(review.getUserId(), "REVIEW", "REMOVE", review.getId());
+        feedService.addEvent(review.getUserId(), EventType.REVIEW.name(), EventOperation.REMOVE.name(), review.getId());
         log.info("Отзыв с ID {} удалён", reviewId);
     }
 

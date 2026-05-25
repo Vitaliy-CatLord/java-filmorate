@@ -16,6 +16,8 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 
 import java.util.Comparator;
 import java.util.List;
@@ -107,7 +109,7 @@ public class FilmService {
         User user = usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
-        feedService.addEvent(userId, "LIKE", "ADD", filmId);
+        feedService.addEvent(userId, EventType.LIKE.name(), EventOperation.ADD.name(), filmId);
         filmStorage.addLike(userId, filmId);
         log.info("Пользователь {} поставил лайк фильму {}.", user.getName(), film.getName());
     }
@@ -118,7 +120,7 @@ public class FilmService {
         User user = usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
-        feedService.addEvent(userId, "LIKE", "REMOVE", filmId);
+        feedService.addEvent(userId, EventType.LIKE.name(), EventOperation.REMOVE.name(), filmId);
         filmStorage.removeLike(userId, filmId);
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
