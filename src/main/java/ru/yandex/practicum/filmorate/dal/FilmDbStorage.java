@@ -104,6 +104,38 @@ public class FilmDbStorage extends BaseStorage<Film> {
     private static final String DELETE_FILM_DIRECTORS_QUERY =
             "DELETE FROM film_directors WHERE film_id = ?";
 
+    private static final String SEARCH_BY_TITLE_QUERY = """
+            SELECT f.*
+            FROM films f
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+            GROUP BY f.id
+            ORDER BY COUNT(l.user_id) DESC
+            """;
+
+    private static final String SEARCH_BY_DIRECTOR_QUERY = """
+            SELECT f.*
+            FROM films f
+            JOIN film_directors fd ON f.id = fd.film_id
+            JOIN directors d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+            GROUP BY f.id
+            ORDER BY COUNT(l.user_id) DESC
+            """;
+
+    private static final String SEARCH_BY_TITLE_AND_DIRECTOR_QUERY = """
+            SELECT f.*
+            FROM films f
+            LEFT JOIN film_directors fd ON f.id = fd.film_id
+            LEFT JOIN directors d ON fd.director_id = d.id
+            LEFT JOIN likes l ON f.id = l.film_id
+            WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))
+               OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%'))
+            GROUP BY f.id
+            ORDER BY COUNT(l.user_id) DESC
+            """;
+
     public FilmDbStorage(JdbcTemplate jdbc, FilmRowMapper mapper) {
         super(jdbc, mapper);
     }
@@ -318,6 +350,19 @@ public class FilmDbStorage extends BaseStorage<Film> {
                 },
                 film.getId());
         film.setDirectors(new ArrayList<>(directors));
+    }
+
+    public List<Film> searchFilms(String query, boolean byTitle, boolean byDirector) {
+        List<Film> films;
+        if (byTitle && byDirector) {
+            films = findMany(SEARCH_BY_TITLE_AND_DIRECTOR_QUERY, query, query);
+        } else if (byTitle) {
+            films = findMany(SEARCH_BY_TITLE_QUERY, query);
+        } else {
+            films = findMany(SEARCH_BY_DIRECTOR_QUERY, query);
+        }
+        films.forEach(this::loadLGR);
+        return films;
     }
 
     public List<Film> getRecommendations(long userId) {
