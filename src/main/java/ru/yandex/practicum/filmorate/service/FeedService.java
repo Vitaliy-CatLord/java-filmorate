@@ -6,7 +6,9 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.UserDbStorage;
 import ru.yandex.practicum.filmorate.dto.EventDto;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 
 import java.util.List;
 
@@ -17,6 +19,7 @@ import java.util.List;
 public class FeedService {
     //добавление слоя репозитория на данном этапе избыточно
     JdbcTemplate jdbc;
+    UserDbStorage usersStorage;
 
     private static final String INSERT_QUERY = "INSERT INTO user_feeds (user_id, event_type, operation, entity_id, timestamp)" +
             "VALUES (?, ?, ?, ?, ?)";
@@ -27,10 +30,14 @@ public class FeedService {
 
     public void addEvent(Long userId, String eventType, String operation, Long entityId) {
         long currentTimeMillis = System.currentTimeMillis();
+        log.info("Добавление новости по {} {} сущности c ID {} по юзеру с ID {}.", eventType, operation, entityId, userId);
         jdbc.update(INSERT_QUERY, userId, eventType, operation, entityId, currentTimeMillis);
     }
 
     public List<EventDto> getUserFeeds(Long userId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
         return jdbc.query(FIND_USER_FEEDS_QUERY, (rs, rowNum) -> {
             EventDto event = new EventDto();
             event.setEventId(rs.getLong("eventId"));

@@ -65,7 +65,6 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
         feedService.addEvent(userId, EventType.FRIEND.name(), EventOperation.ADD.name(), friendId);
-        feedService.addEvent(friendId, EventType.FRIEND.name(), EventOperation.ADD.name(), userId);
         usersStorage.addFriend(userId, friendId);
         log.info("Пользователь  c ID {} отправил заявку на добавление в друзья ID {}.", userId, friendId);
     }
@@ -77,7 +76,6 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Друг с id " + friendId + " не найден"));
 
         feedService.addEvent(userId, EventType.FRIEND.name(), EventOperation.REMOVE.name(), friendId);
-        feedService.addEvent(friendId, EventType.FRIEND.name(), EventOperation.REMOVE.name(), userId);
         usersStorage.removeFriend(userId, friendId);
         log.info("Пользователь ID {} больше не дружит с ID {}.", userId, friendId);
     }
