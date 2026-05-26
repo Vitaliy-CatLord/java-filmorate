@@ -17,6 +17,7 @@ import java.util.List;
 public class DirectorController {
 
     private final DirectorService directorService;
+    private static final String DIRECTOR_PATH = "/{id}";
 
     @GetMapping
     public List<DirectorDto> getAllDirectors() {
@@ -24,7 +25,7 @@ public class DirectorController {
         return directorService.getAllDirectors();
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(DIRECTOR_PATH)
     public DirectorDto getDirectorById(@PathVariable long id) {
         log.info("Выполнение запроса на получение режиссёра с ID {}", id);
         return directorService.getDirectorById(id);
@@ -42,7 +43,7 @@ public class DirectorController {
         return directorService.updateDirector(dto);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(DIRECTOR_PATH)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteDirector(@PathVariable long id) {
         log.info("Выполнение запроса на удаление режиссёра с ID {}", id);

@@ -18,6 +18,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReviewController {
     private final ReviewService reviewService;
+    private static final String REVIEW_PATH = "/{id}";
+    private static final String SETTING_REVIEW_LIKE_PATH = "/{id}/like/{userId}";
+    private static final String SETTING_REVIEW_DISLIKE_PATH = "/{id}/dislike/{userId}";
 
     @PostMapping
     public ReviewDto createNewReview(@RequestBody @Valid NewReviewRequest request) {
@@ -31,13 +34,13 @@ public class ReviewController {
         return reviewService.updateReview(request);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping(REVIEW_PATH)
     public void deleteReview(@PathVariable Long id) {
         log.info("Выполнение запроса на удаление отзыва с id {}", id);
         reviewService.deleteReview(id);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(REVIEW_PATH)
     public ReviewDto getReview(@PathVariable Long id) {
         log.info("Выполнение запроса на получение отзыва с id {}", id);
         return reviewService.getReviewById(id);
@@ -51,25 +54,25 @@ public class ReviewController {
         return reviewService.getReviews(filmId, count);
     }
 
-    @PutMapping("/{id}/like/{userId}")
+    @PutMapping(SETTING_REVIEW_LIKE_PATH)
     public void addLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Пользователь с id {} поставил лайк отзыву с id {}", userId, id);
         reviewService.addLikeReview(id, userId);
     }
 
-    @PutMapping("/{id}/dislike/{userId}")
+    @PutMapping(SETTING_REVIEW_DISLIKE_PATH)
     public void addDislike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Пользователь с id {} поставил дизлайк отзыву с id {}", userId, id);
         reviewService.addDislikeReview(id, userId);
     }
 
-    @DeleteMapping("/{id}/like/{userId}")
+    @DeleteMapping(SETTING_REVIEW_LIKE_PATH)
     public void removeLike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Пользователь с id {} удалил лайк отзыву с id {}", userId, id);
         reviewService.removeVote(id, userId);
     }
 
-    @DeleteMapping("/{id}/dislike/{userId}")
+    @DeleteMapping(SETTING_REVIEW_DISLIKE_PATH)
     public void removeDislike(@PathVariable Long id, @PathVariable Long userId) {
         log.info("Пользователь с id {} удалил дизлайк отзыву с id {}", userId, id);
         reviewService.removeVote(id, userId);

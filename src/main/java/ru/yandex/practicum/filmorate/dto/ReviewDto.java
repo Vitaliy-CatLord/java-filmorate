@@ -7,10 +7,10 @@ import lombok.experimental.FieldDefaults;
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ReviewDto {
-    private Long reviewId;
-    private String content;
-    private Boolean isPositive;
-    private Long userId;
-    private Long filmId;
-    private Integer useful;
+    Long reviewId;
+    String content;
+    Boolean isPositive;
+    Long userId;
+    Long filmId;
+    Integer useful;
 }
