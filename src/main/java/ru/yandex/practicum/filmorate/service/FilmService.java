@@ -12,9 +12,12 @@ import ru.yandex.practicum.filmorate.dto.UpdateFilmRequest;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mappers.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 
 import java.util.Comparator;
 import java.util.List;
@@ -29,7 +32,8 @@ public class FilmService {
     FilmDbStorage filmStorage;
     RatingDbStorage ratingStorage;
     GenreDbStorage genreStorage;
-    FriendshipStatusDbStorage friendshipStatusStorage;
+    FeedService feedService;
+    DirectorDbStorage directorStorage;
 
     Comparator<Film> filmLikesComparator = Comparator.comparing((Film film) -> film.getLikesUserId().size());
 
@@ -45,6 +49,13 @@ public class FilmService {
             for (Genre genre : request.getGenres()) {
                 genreStorage.findById(genre.getGenreId())
                         .orElseThrow(() -> new NotFoundException("Жанр не найден"));
+            }
+        }
+
+        if (request.getDirectors() != null) {
+            for (Director director : request.getDirectors()) {
+                directorStorage.findById(director.getId())
+                        .orElseThrow(() -> new NotFoundException("Режиссёр с id " + director.getId() + " не найден"));
             }
         }
 
@@ -65,6 +76,13 @@ public class FilmService {
 
         if (request.getMpaRating() != null) {
             ratingStorage.findById(request.getMpaRating().getMpaRatingId());
+        }
+
+        if (request.getDirectors() != null) {
+            for (Director director : request.getDirectors()) {
+                directorStorage.findById(director.getId())
+                        .orElseThrow(() -> new NotFoundException("Режиссёр с id " + director.getId() + " не найден"));
+            }
         }
 
         FilmMapper.updateFilmFields(film, request);
@@ -91,6 +109,7 @@ public class FilmService {
         User user = usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
+        feedService.addEvent(userId, EventType.LIKE.name(), EventOperation.ADD.name(), filmId);
         filmStorage.addLike(userId, filmId);
         log.info("Пользователь {} поставил лайк фильму {}.", user.getName(), film.getName());
     }
@@ -101,20 +120,99 @@ public class FilmService {
         User user = usersStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
 
+        feedService.addEvent(userId, EventType.LIKE.name(), EventOperation.REMOVE.name(), filmId);
         filmStorage.removeLike(userId, filmId);
         log.info("Пользователь {} удалил лайк у фильма {}.", user.getName(), film.getName());
     }
 
-    public List<FilmDto> getTopFilms(int countOfTop) {
-        if (countOfTop < 0) {
+    public List<FilmDto> getTopFilms(Integer countOfTop, Integer genreId, Integer year) {
+        int limit;
+        if (countOfTop != null) {
+            limit = countOfTop;
+        } else if (genreId != null || year != null) {
+            limit = Integer.MAX_VALUE;
+        } else {
+            limit = 10;
+        }
+        if (limit < 0) {
             throw new ValidationException("Число наиболее популярных фильмов не может быть отрицательным");
         }
-        log.info("Получение топ {} по количеству лайков", countOfTop);
-        return filmStorage.getTopFilms(countOfTop)
+        log.info("Получение топ {} по количеству лайков. Фильтры: genreId={}, year={}", countOfTop, genreId, year);
+        return filmStorage.getTopFilms(limit, genreId, year)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
     }
 
+    public List<FilmDto> getCommonFilms(Long userId, Long friendId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        usersStorage.findById(friendId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + friendId + " не найден"));
+
+        log.info("Получение общих фильмов юзеров {} и {}", userId, friendId);
+        return filmStorage.getCommonFilms(userId, friendId)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> getRecommendations(Long userId) {
+        usersStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+
+        log.info("Получение рекомендаций для пользователя с ID {}", userId);
+        return filmStorage.getRecommendations(userId).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public void deleteFilmById(Long filmId) {
+        boolean isDeleted = filmStorage.delete(filmId);
+        if (!isDeleted) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
+        log.info("Фильм с id {} успешно удален", filmId);
+    }
+
+    public List<FilmDto> getFilmsByDirector(long directorId, String sortBy) {
+        directorStorage.findById(directorId)
+                .orElseThrow(() -> new NotFoundException("Режиссёр с id " + directorId + " не найден"));
+
+        List<Film> films;
+        if ("year".equals(sortBy)) {
+            films = filmStorage.getFilmsByDirectorSortedByYear(directorId);
+        } else if ("likes".equals(sortBy)) {
+            films = filmStorage.getFilmsByDirectorSortedByLikes(directorId);
+        } else {
+            throw new ValidationException("Недопустимое значение sortBy: " + sortBy + ". Допустимые значения: year, likes");
+        }
+
+        log.info("Получение фильмов режиссёра {} с сортировкой по {}", directorId, sortBy);
+        return films.stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<FilmDto> searchFilms(String query, List<String> by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Параметр query не может быть пустым");
+        }
+        if (by == null || by.isEmpty()) {
+            throw new ValidationException("Параметр by не может быть пустым");
+        }
+
+        boolean byTitle = by.contains("title");
+        boolean byDirector = by.contains("director");
+
+        if (!byTitle && !byDirector) {
+            throw new ValidationException("Параметр by должен содержать 'title' и/или 'director'");
+        }
+
+        log.info("Поиск фильмов по запросу '{}', критерии: {}", query, by);
+        return filmStorage.searchFilms(query, byTitle, byDirector).stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
 
 }

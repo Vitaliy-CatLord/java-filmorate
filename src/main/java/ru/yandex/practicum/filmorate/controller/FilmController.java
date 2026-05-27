@@ -18,9 +18,8 @@ import java.util.List;
 @RequestMapping("/films")
 @RequiredArgsConstructor
 public class FilmController {
-    private final FilmService filmService;
-
     private static final String SETTING_LIKES = "/{id}/like/{userId}";
+    private final FilmService filmService;
 
     @PostMapping
     public FilmDto createFilm(@Valid @RequestBody NewFilmRequest newFilm) {
@@ -58,10 +57,41 @@ public class FilmController {
         filmService.removeLike(id, userId);
     }
 
+    // добавил возможность выбора жанра и года для вывода топ фильмов
     @GetMapping("/popular")
-    public List<FilmDto> getTopFilms(@RequestParam(value = "count", defaultValue = "10") Integer count) {
-        log.info("Выполнение запроса на получение ТОП{} популярных фильмов", count);
-        return filmService.getTopFilms(count);
+    public List<FilmDto> getTopFilms(
+            @RequestParam(value = "count", required = false) Integer count, // убрал дефолтный лимит в 10 для постмана
+            @RequestParam(value = "genreId", required = false) Integer genreId,
+            @RequestParam(value = "year", required = false) Integer year) {
+        log.info("Выполнение запроса на получение популярных фильмов. Фильтры: genreId={}, year={}", genreId, year);
+        return filmService.getTopFilms(count, genreId, year);
     }
 
+    @GetMapping("/common")
+    public List<FilmDto> getCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        log.info("Выполнение запроса на получение общих фильмов юзеров {} и {}.", userId, friendId);
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
+    @DeleteMapping("/{filmId}")
+    public void deleteFilmById(@PathVariable Long filmId) {
+        log.info("Выполнение запроса на удаление фильма с ID {}", filmId);
+        filmService.deleteFilmById(filmId);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<FilmDto> getFilmsByDirector(
+            @PathVariable long directorId,
+            @RequestParam(value = "sortBy", defaultValue = "likes") String sortBy) {
+        log.info("Выполнение запроса на получение фильмов режиссёра {} с сортировкой по {}", directorId, sortBy);
+        return filmService.getFilmsByDirector(directorId, sortBy);
+    }
+
+    @GetMapping("/search")
+    public List<FilmDto> searchFilms(
+            @RequestParam String query,
+            @RequestParam List<String> by) {
+        log.info("Выполнение запроса на поиск фильмов по запросу '{}', критерии: {}", query, by);
+        return filmService.searchFilms(query, by);
+    }
 }

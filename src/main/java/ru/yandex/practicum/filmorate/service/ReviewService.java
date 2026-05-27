@@ -1,0 +1,103 @@
+package ru.yandex.practicum.filmorate.service;
+
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dal.FilmDbStorage;
+import ru.yandex.practicum.filmorate.dal.ReviewDbStorage;
+import ru.yandex.practicum.filmorate.dal.ReviewRatingDbStorage;
+import ru.yandex.practicum.filmorate.dal.UserDbStorage;
+import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mappers.ReviewMapper;
+import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+public class ReviewService {
+    ReviewDbStorage reviewStorage;
+    ReviewRatingDbStorage ratingStorage;
+    UserDbStorage userStorage;
+    FilmDbStorage filmStorage;
+    FeedService feedService;
+
+    public ReviewDto createReview(NewReviewRequest request) {
+        if (userStorage.findById(request.getUserId()).isEmpty()) {
+            throw new NotFoundException("Пользователь с ID " + request.getUserId() + " не найден");
+        }
+        if (filmStorage.findById(request.getFilmId()).isEmpty()) {
+            throw new NotFoundException("Фильм с ID " + request.getUserId() + " не найден");
+        }
+
+        Review review = ReviewMapper.mapToReview(request);
+        ReviewDto reviewDto = ReviewMapper.mapToReviewDto(reviewStorage.save(review));
+
+        feedService.addEvent(reviewDto.getUserId(), EventType.REVIEW.name(), EventOperation.ADD.name(), reviewDto.getReviewId());
+        log.info("Создан новый отзыв с ID: {}", reviewDto.getReviewId());
+        return reviewDto;
+    }
+
+    public ReviewDto updateReview(UpdateReviewRequest request) {
+        if (userStorage.findById(request.getUserId()).isEmpty()) {
+            throw new NotFoundException("Пользователь с ID " + request.getUserId() + " не найден");
+        }
+        if (filmStorage.findById(request.getFilmId()).isEmpty()) {
+            throw new NotFoundException("Фильм с ID " + request.getUserId() + " не найден");
+        }
+
+        long id = request.getId();
+        Review review = reviewStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Отзыв с ID " + id + " не найден"));
+
+        ReviewMapper.updateReviewFields(review, request);
+        feedService.addEvent(review.getUserId(), EventType.REVIEW.name(), EventOperation.UPDATE.name(), review.getId());
+        log.info("Отзыв с ID {} обновлён", id);
+        return ReviewMapper.mapToReviewDto(reviewStorage.update(review));
+    }
+
+    public void deleteReview(Long reviewId) {
+        Review review = reviewStorage.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Отзыв с ID " + reviewId + " не найден"));
+
+        reviewStorage.delete(reviewId);
+        feedService.addEvent(review.getUserId(), EventType.REVIEW.name(), EventOperation.REMOVE.name(), review.getId());
+        log.info("Отзыв с ID {} удалён", reviewId);
+    }
+
+    public ReviewDto getReviewById(Long id) {
+        Review review = reviewStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Отзыв с ID " + id + " не найден"));
+        return ReviewMapper.mapToReviewDto(review);
+    }
+
+    public List<ReviewDto> getReviews(Long filmId, Integer count) {
+        List<Review> reviews = reviewStorage.findByFilmId(filmId, count);
+        return reviews.stream()
+                .map(ReviewMapper::mapToReviewDto)
+                .collect(Collectors.toList());
+    }
+
+    public void addLikeReview(Long reviewId, Long userId) {
+        ratingStorage.addVote(reviewId, userId, "LIKE");
+        log.info("Пользователь {} поставил лайк отзыву {}", userId, reviewId);
+    }
+
+    public void addDislikeReview(Long reviewId, Long userId) {
+        ratingStorage.addVote(reviewId, userId, "DISLIKE");
+        log.info("Пользователь {} поставил дизлайк отзыву {}", userId, reviewId);
+    }
+
+    public void removeVote(Long reviewId, Long userId) {
+        ratingStorage.removeVote(reviewId, userId);
+        log.info("Пользователь {} удалил голос для отзыва {}", userId, reviewId);
+    }
+}

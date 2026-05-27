@@ -36,6 +36,8 @@ public class UserDbStorage extends BaseStorage<User> {
             """;
     private static final String DELETE_FRIEND_QUERY =
             "DELETE FROM friendList WHERE user_id = ? AND friend_id = ?";
+    private static final String DELETE_USER_FRIENDS_QUERY = "DELETE FROM friendList WHERE user_id = ? OR friend_id = ?";
+    private static final String DELETE_USER_LIKES_QUERY = "DELETE FROM likes WHERE user_id = ?";
 
     public UserDbStorage(JdbcTemplate jdbc, UserRowMapper mapper) {
         super(jdbc, mapper);
@@ -82,6 +84,8 @@ public class UserDbStorage extends BaseStorage<User> {
     }
 
     public boolean delete(long userId) {
+        jdbc.update(DELETE_USER_FRIENDS_QUERY, userId, userId);
+        jdbc.update(DELETE_USER_LIKES_QUERY, userId);
         return delete(DELETE_QUERY, userId);
     }
 
